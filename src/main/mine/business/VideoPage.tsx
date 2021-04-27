@@ -21,10 +21,8 @@ export default class VideoPage extends React.Component {
 
   constructor() {
     super(arguments);
-    Orientation.getOrientation(() => {
-
-    })
   }
+
   componentDidMount() {
     Orientation.lockToPortrait();
     console.log('VideoPage componentDidMount ' + this.orientation);

@@ -1,12 +1,13 @@
 import React from 'react';
 import {Button, Text, View} from 'react-native';
 import {NavigationStackProp} from 'react-navigation-stack';
+import {NavigationParams, NavigationRoute} from 'react-navigation';
 
 interface Props {
-  navigation: NavigationStackProp<{}>;
+  navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
 }
 
-const HomePage = ({navigation}: Props) => {
+const HomePage = (prop: Props) => {
   return (
     <View style={{flex: 1, flexDirection: 'column', alignItems: 'center'}}>
       <Text>Home Screen</Text>
@@ -14,32 +15,32 @@ const HomePage = ({navigation}: Props) => {
         title={'Go To MainPage Screen'}
         onPress={() => {
           console.log('Go To MainPage Screen');
-          navigation.push('MainPage', {userId: '333999'});
+          prop.navigation.push('MainPage', {userId: '333999'});
         }}
       />
       <Button
         title={'Go To Profile Screen'}
         onPress={() => {
           console.log('Go To Profile Screen');
-          navigation.push('ProfileScreen', {userId: '333999'});
+          prop.navigation.push('ProfileScreen', {userId: '333999'});
         }}
       />
       <Button
-        title={'Go To MobxApp Screen'}
+        title={'Go To MobxPage Screen'}
         onPress={() => {
-          navigation.push('MobxApp');
+          prop.navigation.push('MobxApp');
         }}
       />
       <Button
         title={'Go To OrientationPage Screen'}
         onPress={() => {
-          navigation.push('OrientationPage', {userId: '333999'});
+          prop.navigation.push('OrientationPage', {userId: '333999'});
         }}
       />
       <Button
         title={'Go To VideoPage Screen'}
         onPress={() => {
-          navigation.push('VideoPage');
+          prop.navigation.push('VideoPage');
         }}
       />
     </View>

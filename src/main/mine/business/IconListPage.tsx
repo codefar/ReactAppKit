@@ -1,37 +1,18 @@
+import React, {useState} from 'react';
 import {
-  createAppContainer,
-  NavigationParams,
-  NavigationRoute,
-  ScrollView,
-} from 'react-navigation';
-import {createBottomTabNavigator} from 'react-navigation-tabs';
-import Ionicons from 'react-native-vector-icons/AntDesign';
-import React from 'react';
-import {View, Text, Button} from 'react-native';
-import {
-  NavigationStackProp,
-} from 'react-navigation-stack';
+  FlatList,
+  ListRenderItemInfo,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+} from 'react-native';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
-class HomeScreen extends React.Component<Props> {
-  static navigationOptions = {
-    title: '首页',
-  };
-  render() {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text>Home!</Text>
-        <Button
-          title={'TabMain'}
-          onPress={() => {
-            this.props.navigation.navigate('HomePage');
-          }}
-        />
-      </View>
-    );
-  }
-}
-
-const ss = [
+const DATA = [
   'stepforward',
   'stepbackward',
   'forward',
@@ -332,77 +313,62 @@ const ss = [
   'slack-square',
 ];
 
-interface Props {
-  navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
+interface ItemProp {
+  item: string;
+  onPress: () => void;
+  style: ViewStyle;
 }
 
-class SettingsScreen extends React.Component<Props> {
-  static navigationOptions = {
-    title: '我的',
-  };
-  render() {
-    return (
-      <ScrollView>
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          {ss?.map((item: string) => {
-            console.log(item);
-            return (
-              <View>
-                <Text>{item}</Text>
-                <Ionicons key={item} name={item} size={25} />
-              </View>
-            );
-          })}
-        </View>
-      </ScrollView>
-    );
-  }
-}
-
-// class DetailsScreen extends React.Component {
-//   render() {
-//     return (
-//       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-//         <Text>Details!</Text>
-//       </View>
-//     );
-//   }
-// }
-
-// const HomeStack = createStackNavigator({
-//   Home: HomeScreen,
-//   Details: DetailsScreen,
-// });
-//
-// const SettingsStack = createStackNavigator({
-//   Settings: SettingsScreen,
-//   Details: DetailsScreen,
-// });
-
-const TabNavigator = createBottomTabNavigator(
-  {
-    Home: HomeScreen,
-    Settings: SettingsScreen,
-  },
-  {
-    defaultNavigationOptions: ({navigation}) => ({
-      tabBarIcon: ({tintColor}) => {
-        const {routeName} = navigation.state;
-        let iconName: string = '';
-        if (routeName === 'Home') {
-          iconName = 'home';
-        } else if (routeName === 'Settings') {
-          iconName = 'adduser';
-        }
-        // You can return any component that you like here!
-        return <Ionicons name={iconName} size={25} color={tintColor}/>;
-      },
-    }),
-    tabBarOptions: {
-      activeTintColor: '#000000',
-      inactiveTintColor: 'gray',
-    },
-  },
+const Item = (prop: ItemProp) => (
+  <TouchableOpacity onPress={prop.onPress} style={[styles.item, prop.style]}>
+    <View style={{flexDirection: 'column'}}>
+      <Text style={styles.title}>{prop.item}</Text>
+      <AntDesign name={prop.item} size={25} />
+    </View>
+  </TouchableOpacity>
 );
 
-export default createAppContainer(TabNavigator);
+const App = () => {
+  const [selectedId, setSelectedId] = useState('');
+
+  const renderItem = (info: ListRenderItemInfo<string>) => {
+    const backgroundColor = info.item === selectedId ? '#6e3b6e' : '#f9c2ff';
+
+    return (
+      <Item
+        item={info.item}
+        onPress={() => setSelectedId(info.item)}
+        style={{backgroundColor}}
+      />
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <FlatList<string>
+        data={DATA}
+        numColumns={2}
+        renderItem={renderItem}
+        keyExtractor={item => item}
+        extraData={selectedId}
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    marginTop: StatusBar.currentHeight || 0,
+  },
+  item: {
+    padding: 2,
+    marginVertical: 2,
+    marginHorizontal: 2,
+  },
+  title: {
+    fontSize: 32,
+  },
+});
+
+export default App;

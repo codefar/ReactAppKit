@@ -1,45 +1,38 @@
-import HomePage from './home/HomePage';
 import {createAppContainer} from 'react-navigation';
-import {createStackNavigator, TransitionPresets} from 'react-navigation-stack';
-import MobxApp from './home/MobxApp';
-import ProfileScreen from './home/ProfileScreen';
-import OrientationPage from './home/OrientationPage';
-import VideoPage from './home/VideoPage';
-import MainPage from './main/MainPage';
+import {createStackNavigator} from 'react-navigation-stack';
+import AuthApp from './login/AuthApp';
+import React from 'react';
+import SplashScreen from 'react-native-splash-screen';
+import SplashPage from './splash/SplashPage';
 
 const AppNavigator = createStackNavigator(
   {
-    HomePage: {
-      screen: HomePage,
+    AuthApp: {
+      screen: AuthApp,
     },
-    MobxApp: {
-      screen: MobxApp,
-    },
-    ProfileScreen: {
-      screen: ProfileScreen,
-    },
-    OrientationPage: {
-      screen: OrientationPage,
-    },
-    VideoPage: {
-      screen: VideoPage,
-      navigationOptions: {
-        // header: null,
-      },
-    },
-    MainPage: {
-      screen: MainPage,
+    SplashPage: {
+      screen: SplashPage,
     },
   },
   {
-    initialRouteName: 'MainPage',
+    initialRouteName: 'SplashPage',
     headerMode: 'none',
     defaultNavigationOptions: {
-      gestureEnabled: true,
-      cardOverlayEnabled: true,
-      ...TransitionPresets.SlideFromRightIOS,
+      // gestureEnabled: true,
+      // cardOverlayEnabled: true,
+      // ...TransitionPresets.SlideFromRightIOS,
     },
   },
 );
 
-export default createAppContainer(AppNavigator);
+const AppContainer = createAppContainer(AppNavigator);
+
+export default class App extends React.Component {
+  componentDidMount() {
+    SplashScreen.hide();
+  }
+
+  render() {
+    return <AppContainer />;
+  }
+}

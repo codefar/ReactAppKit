@@ -27,7 +27,7 @@ interface Props {
 }
 
 @observer
-export default class MobxApp extends React.Component<Props, {}> {
+export default class MobxPage extends React.Component<Props, {}> {
   appStore: AppState;
 
   constructor(props: Props) {

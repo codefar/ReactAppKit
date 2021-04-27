@@ -7,7 +7,7 @@ interface Props {
   navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
 }
 
-export default class ProfileScreen extends React.Component<Props> {
+export default class ProfilePage extends React.Component<Props> {
   render() {
     return (
       <View style={{flex: 1, flexDirection: 'column', alignItems: 'center'}}>
