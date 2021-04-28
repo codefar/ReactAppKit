@@ -4,6 +4,7 @@ import AuthApp from './login/AuthApp';
 import React from 'react';
 import SplashScreen from 'react-native-splash-screen';
 import SplashPage from './splash/SplashPage';
+import NavigationService from './NavigationService';
 
 const AppNavigator = createStackNavigator(
   {
@@ -33,6 +34,12 @@ export default class App extends React.Component {
   }
 
   render() {
-    return <AppContainer />;
+    return (
+      <AppContainer
+        ref={navigatorRef => {
+          NavigationService.setTopLevelNavigator(navigatorRef);
+        }}
+      />
+    );
   }
 }
