@@ -29,6 +29,7 @@
 		C5F737E07DA1473DAEECFC89 /* Octicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 637B20BDAE8D4681882CE0D8 /* Octicons.ttf */; };
 		079FEED3B8FE4FD8975D8FEF /* SimpleLineIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8F20BD18701A4D12826F46D6 /* SimpleLineIcons.ttf */; };
 		4EB5A8B8353F4177B57F0770 /* Zocial.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AA955F8AB6B84BC6A7CE7EC0 /* Zocial.ttf */; };
+		5031088078514885904B9A93 /* libRNIjkplayer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 71C2A4EC7E0A4DCDBE3E34FF /* libRNIjkplayer.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -77,6 +78,8 @@
 		637B20BDAE8D4681882CE0D8 /* Octicons.ttf */ = {isa = PBXFileReference; name = "Octicons.ttf"; path = "../node_modules/react-native-vector-icons/Fonts/Octicons.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		8F20BD18701A4D12826F46D6 /* SimpleLineIcons.ttf */ = {isa = PBXFileReference; name = "SimpleLineIcons.ttf"; path = "../node_modules/react-native-vector-icons/Fonts/SimpleLineIcons.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		AA955F8AB6B84BC6A7CE7EC0 /* Zocial.ttf */ = {isa = PBXFileReference; name = "Zocial.ttf"; path = "../node_modules/react-native-vector-icons/Fonts/Zocial.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		74CF7215100047A9AD934081 /* RNIjkplayer.xcodeproj */ = {isa = PBXFileReference; name = "RNIjkplayer.xcodeproj"; path = "../node_modules/rn-ijkplayer/ios/RNIjkplayer.xcodeproj"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = wrapper.pb-project; explicitFileType = undefined; includeInIndex = 0; };
+		71C2A4EC7E0A4DCDBE3E34FF /* libRNIjkplayer.a */ = {isa = PBXFileReference; name = "libRNIjkplayer.a"; path = "libRNIjkplayer.a"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = archive.ar; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +95,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5BDA72A826306E5800C3142F /* libRNEasyIjkplayer.a in Frameworks */,
+				5031088078514885904B9A93 /* libRNIjkplayer.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -148,6 +152,7 @@
 			isa = PBXGroup;
 			children = (
 				5BDA729F26306E1400C3142F /* RNEasyIjkplayer.xcodeproj */,
+				74CF7215100047A9AD934081 /* RNIjkplayer.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -415,6 +420,14 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MyApp.app/MyApp";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../node_modules/rn-ijkplayer/ios/**",
+				);
 			};
 			name = Debug;
 		};
@@ -438,6 +451,14 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MyApp.app/MyApp";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../node_modules/rn-ijkplayer/ios/**",
+				);
 			};
 			name = Release;
 		};
@@ -463,6 +484,10 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../node_modules/rn-ijkplayer/ios/**",
+				);
 			};
 			name = Debug;
 		};
@@ -486,6 +511,10 @@
 				PRODUCT_NAME = MyApp;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../node_modules/rn-ijkplayer/ios/**",
+				);
 			};
 			name = Release;
 		};

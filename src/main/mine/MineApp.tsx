@@ -6,6 +6,7 @@ import OrientationPage from './business/OrientationPage';
 import VideoPage from './business/VideoPage';
 import MinePage from './MinePage';
 import SignOutPage from './business/SignOutPage';
+import VideoPlayer from "./business/VideoPlayer";
 
 const AppNavigator = createStackNavigator(
   {
@@ -26,6 +27,12 @@ const AppNavigator = createStackNavigator(
     },
     VideoPage: {
       screen: VideoPage,
+      navigationOptions: {
+        // header: null,
+      },
+    },
+    VideoPlayer: {
+      screen: VideoPlayer,
       navigationOptions: {
         // header: null,
       },

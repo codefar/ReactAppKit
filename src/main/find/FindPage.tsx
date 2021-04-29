@@ -2,16 +2,13 @@ import React from 'react';
 import {Button, StyleSheet, Text, View} from 'react-native';
 import {NavigationStackProp} from 'react-navigation-stack';
 import {NavigationParams, NavigationRoute} from 'react-navigation';
-
-// eslint-disable-next-line no-undef
+import Swiper from 'react-native-swiper';
 
 interface Props {
   navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
 }
 
-// const DATA = ['HomePage', 'Props', 'Home'];
-
-export default class HomePage extends React.Component<Props> {
+export default class FindPage extends React.Component<Props> {
   _renderItem = (item: {item: string; index: number}) => {
     return (
       <View style={styles.slide}>
@@ -23,7 +20,27 @@ export default class HomePage extends React.Component<Props> {
   render() {
     return (
       <View style={{flex: 1, flexDirection: 'column', alignItems: 'center'}}>
-        <Text>Home Screen</Text>
+        <View style={styles.wrapper}>
+          <Swiper
+            containerStyle={styles.wrapper}
+            paginationStyle={{bottom: 5}}
+            showsButtons={false}
+            dotColor={'#aaa'}
+            activeDotColor={'#fff'}
+            loop={true}
+            autoplay={true}
+            height={180}>
+            <View style={styles.slide1}>
+              <Text style={styles.text}>Hello Swiper</Text>
+            </View>
+            <View style={styles.slide2}>
+              <Text style={styles.text}>Beautiful</Text>
+            </View>
+            <View style={styles.slide3}>
+              <Text style={styles.text}>And simple</Text>
+            </View>
+          </Swiper>
+        </View>
         <Button
           title={'Go To MainPage Screen'}
           onPress={() => {
@@ -62,6 +79,33 @@ export default class HomePage extends React.Component<Props> {
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    height: 180,
+    overflow: 'hidden',
+  },
+  slide1: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#9DD6EB',
+  },
+  slide2: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#97CAE5',
+  },
+  slide3: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#92BBD9',
+  },
+  text: {
+    color: '#fff',
+    fontSize: 30,
+    fontWeight: 'bold',
+  },
   container: {
     height: 175,
     padding: 15,

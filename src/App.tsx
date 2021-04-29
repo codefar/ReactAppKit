@@ -2,9 +2,8 @@ import {createAppContainer} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
 import AuthApp from './login/AuthApp';
 import React from 'react';
-import SplashScreen from 'react-native-splash-screen';
+// import SplashScreen from 'react-native-splash-screen';
 import SplashPage from './splash/SplashPage';
-import NavigationService from './NavigationService';
 
 const AppNavigator = createStackNavigator(
   {
@@ -16,7 +15,7 @@ const AppNavigator = createStackNavigator(
     },
   },
   {
-    initialRouteName: 'SplashPage',
+    initialRouteName: 'AuthApp',
     headerMode: 'none',
     defaultNavigationOptions: {
       // gestureEnabled: true,
@@ -28,18 +27,4 @@ const AppNavigator = createStackNavigator(
 
 const AppContainer = createAppContainer(AppNavigator);
 
-export default class App extends React.Component {
-  componentDidMount() {
-    SplashScreen.hide();
-  }
-
-  render() {
-    return (
-      <AppContainer
-        ref={navigatorRef => {
-          NavigationService.setTopLevelNavigator(navigatorRef);
-        }}
-      />
-    );
-  }
-}
+export default AppContainer;

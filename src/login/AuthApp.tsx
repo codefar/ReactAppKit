@@ -1,4 +1,4 @@
-import {createSwitchNavigator} from 'react-navigation';
+import {createAppContainer, createSwitchNavigator} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
 import SignInScreen from './SignInScreen';
 import MainApp from '../main/MainApp';
@@ -26,3 +26,5 @@ export default createSwitchNavigator(
     initialRouteName: 'AuthLoading',
   },
 );
+
+// export default createAppContainer(SwitchNavigator);

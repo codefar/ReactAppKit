@@ -9,11 +9,28 @@ import React from 'react';
 // import VideoPage from './mine/business/VideoPage';
 import MineApp from './mine/MineApp';
 import HomePage from './home/HomePage';
+import FindPage from './find/FindPage';
 
 const MainTabNavigator = createBottomTabNavigator(
   {
-    Home: HomePage,
-    MineApp: MineApp,
+    Home: {
+      screen: HomePage,
+      navigationOptions: {
+        tabBarLabel: '首页',
+      },
+    },
+    Find: {
+      screen: FindPage,
+      navigationOptions: {
+        tabBarLabel: '发现',
+      },
+    },
+    MineApp: {
+      screen: MineApp,
+      navigationOptions: {
+        tabBarLabel: '我的',
+      },
+    },
   },
   {
     backBehavior: 'none',
@@ -25,13 +42,15 @@ const MainTabNavigator = createBottomTabNavigator(
           iconName = 'home';
         } else if (routeName === 'MineApp') {
           iconName = 'user';
+        } else if (routeName === 'Find') {
+          iconName = 'find';
         }
         return <Ionicons name={iconName} size={24} color={tintColor} />;
       },
     }),
     tabBarOptions: {
       activeTintColor: 'black',
-      inactiveTintColor: 'gray',
+      inactiveTintColor: '#999',
     },
   },
 );

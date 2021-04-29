@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.15.4",
     "@react-native-community/masked-view": "^0.1.10",
+    "@types/react-native-snap-carousel": "^3.8.2",
     "mobx": "^5.5.0",
     "mobx-react": "^5.2.8",
     "mobx-state-tree": "^3.5.0",
@@ -22,12 +23,15 @@
     "react-native-reanimated": "^2.1.0",
     "react-native-safe-area-context": "^3.2.0",
     "react-native-screens": "^3.1.1",
+    "react-native-snap-carousel": "^3.9.1",
     "react-native-splash-screen": "^3.2.0",
+    "react-native-swiper": "^1.6.0",
     "react-native-vector-icons": "^8.1.0",
     "react-native-video": "^5.1.1",
     "react-navigation": "^4.4.4",
     "react-navigation-stack": "^2.10.4",
-    "react-navigation-tabs": "^2.11.1"
+    "react-navigation-tabs": "^2.11.1",
+    "rn-ijkplayer": "^4.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

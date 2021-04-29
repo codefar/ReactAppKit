@@ -21,9 +21,9 @@ export default class MinePage extends React.Component<Props> {
         </View>
         <View style={{margin: 5}}>
           <Button
-            title={'Mobx App'}
+            title={'VideoPlayer App'}
             onPress={() => {
-              this.props.navigation.push('MobxApp');
+              this.props.navigation.push('VideoPlayer');
             }}
           />
         </View>
