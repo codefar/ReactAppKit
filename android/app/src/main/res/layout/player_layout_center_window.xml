@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:gravity="center" android:orientation="vertical" android:background="#96000000" android:layout_width="160dp" android:layout_height="120dp">
+    <ImageView android:id="@+id/iv_icon" android:layout_width="36dp" android:layout_height="36dp"/>
+    <TextView android:textSize="14sp" android:textColor="0x106000b" android:id="@+id/tv_percent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="10dp"/>
+    <ProgressBar android:id="@+id/pro_percent" android:layout_width="100dp" android:layout_height="3dp" android:max="100" android:progressDrawable="@drawable/player_layer_progress_bar" style="?unknown_attr_ref: 1010078"/>
+</LinearLayout>

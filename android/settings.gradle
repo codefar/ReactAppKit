@@ -1,4 +1,6 @@
 rootProject.name = 'MyApp'
+include ':react-native-ijkplayer'
+project(':react-native-ijkplayer').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-ijkplayer/android')
 include ':rn-ijkplayer'
 project(':rn-ijkplayer').projectDir = new File(rootProject.projectDir, '../node_modules/rn-ijkplayer/android')
 include ':@react-native-async-storage_async-storage'
