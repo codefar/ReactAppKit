@@ -16,15 +16,15 @@ const AuthStack = createStackNavigator(
   },
 );
 
-export default createSwitchNavigator(
+const AutoSwitch = createSwitchNavigator(
   {
     AuthLoading: AuthLoadingScreen,
-    App: MainApp,
-    Auth: AuthStack,
+    MainApp: MainApp,
+    AuthStack: AuthStack,
   },
   {
     initialRouteName: 'AuthLoading',
   },
 );
 
-// export default createAppContainer(SwitchNavigator);
+export default createAppContainer(AutoSwitch);

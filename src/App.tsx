@@ -1,11 +1,8 @@
-import {createAppContainer} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
+import {createAppContainer, createSwitchNavigator} from 'react-navigation';
 import AuthApp from './login/AuthApp';
-import React from 'react';
-// import SplashScreen from 'react-native-splash-screen';
 import SplashPage from './splash/SplashPage';
 
-const AppNavigator = createStackNavigator(
+const AppNavigator = createSwitchNavigator(
   {
     AuthApp: {
       screen: AuthApp,
@@ -15,8 +12,7 @@ const AppNavigator = createStackNavigator(
     },
   },
   {
-    initialRouteName: 'AuthApp',
-    headerMode: 'none',
+    initialRouteName: 'SplashPage',
     defaultNavigationOptions: {
       // gestureEnabled: true,
       // cardOverlayEnabled: true,
@@ -25,6 +21,4 @@ const AppNavigator = createStackNavigator(
   },
 );
 
-const AppContainer = createAppContainer(AppNavigator);
-
-export default AppContainer;
+export default createAppContainer(AppNavigator);

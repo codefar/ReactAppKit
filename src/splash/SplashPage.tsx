@@ -19,7 +19,7 @@ export default function SplashPage(props: Props) {
       <Button
         title={'Splash Page'}
         onPress={() => {
-          props.navigation.replace('AuthApp');
+          props.navigation.navigate('AuthApp');
         }}
       />
     </View>

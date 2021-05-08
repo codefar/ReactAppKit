@@ -1,15 +1,18 @@
-import {createAppContainer} from 'react-navigation';
+import {createStackNavigator, TransitionPresets} from 'react-navigation-stack';
+import VideoPage from '../video/VideoPage';
+import BusinessApp from '../business/BusinessApp';
+import VideoPlayer from '../video/VideoPlayer';
 import {createBottomTabNavigator} from 'react-navigation-tabs';
-import Ionicons from 'react-native-vector-icons/AntDesign';
-import React from 'react';
-// import {createStackNavigator, TransitionPresets} from 'react-navigation-stack';
-// import MobxPage from './mine/business/MobxPage';
-// import ProfilePage from './mine/business/ProfilePage';
-// import OrientationPage from './mine/business/OrientationPage';
-// import VideoPage from './mine/business/VideoPage';
-import MineApp from './mine/MineApp';
 import HomePage from './home/HomePage';
 import FindPage from './find/FindPage';
+import MinePage from './mine/MinePage';
+import {View} from 'react-native';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import React from 'react';
+import NavigationService from '../NavigationService';
+import {createAppContainer} from 'react-navigation';
+import VideoPlayerController from '../video/VideoPlayerController';
+import MediaControls from '../video/MediaControls';
 
 const MainTabNavigator = createBottomTabNavigator(
   {
@@ -25,8 +28,8 @@ const MainTabNavigator = createBottomTabNavigator(
         tabBarLabel: '发现',
       },
     },
-    MineApp: {
-      screen: MineApp,
+    Mine: {
+      screen: MinePage,
       navigationOptions: {
         tabBarLabel: '我的',
       },
@@ -40,12 +43,16 @@ const MainTabNavigator = createBottomTabNavigator(
         let iconName: string = '';
         if (routeName === 'Home') {
           iconName = 'home';
-        } else if (routeName === 'MineApp') {
+        } else if (routeName === 'Mine') {
           iconName = 'user';
         } else if (routeName === 'Find') {
           iconName = 'find';
         }
-        return <Ionicons name={iconName} size={24} color={tintColor} />;
+        return (
+          <View>
+            <AntDesign name={iconName} size={24} color={tintColor} />
+          </View>
+        );
       },
     }),
     tabBarOptions: {
@@ -55,43 +62,54 @@ const MainTabNavigator = createBottomTabNavigator(
   },
 );
 
-const MainTabPage = createAppContainer(MainTabNavigator);
+const TopLevelNavigator = createStackNavigator(
+  {
+    MainTabPage: {
+      screen: MainTabNavigator,
+    },
+    BusinessApp: {
+      screen: BusinessApp,
+    },
+    VideoPlayer: {
+      screen: VideoPlayer,
+    },
+    VideoPlayerController: {
+      screen: VideoPlayerController,
+    },
+    MediaControls: {
+      screen: MediaControls,
+    },
+    VideoPage: {
+      screen: VideoPage,
+      navigationOptions: {
+        // header: null,
+      },
+    },
+  },
+  {
+    initialRouteName: 'MainTabPage',
+    headerMode: 'none',
+    defaultNavigationOptions: {
+      gestureEnabled: true,
+      cardOverlayEnabled: true,
+      ...TransitionPresets.SlideFromRightIOS,
+    },
+  },
+);
 
-export default MainTabPage;
-
-// const AppNavigator = createStackNavigator(
-//   {
-//     MainTabPage: {
-//       screen: MainTabPage,
-//     },
-//     // HomePage: {
-//     //   screen: HomePage,
-//     // },
-//     // MobxApp: {
-//     //   screen: MobxPage,
-//     // },
-//     // ProfileScreen: {
-//     //   screen: ProfilePage,
-//     // },
-//     // OrientationPage: {
-//     //   screen: OrientationPage,
-//     // },
-//     // VideoPage: {
-//     //   screen: VideoPage,
-//     //   navigationOptions: {
-//     //     // header: null,
-//     //   },
-//     // },
-//   },
-//   {
-//     initialRouteName: 'MainTabPage',
-//     headerMode: 'none',
-//     defaultNavigationOptions: {
-//       gestureEnabled: true,
-//       cardOverlayEnabled: true,
-//       ...TransitionPresets.SlideFromRightIOS,
-//     },
-//   },
-// );
-//
+// export default AppNavigator;
 // export default createAppContainer(AppNavigator);
+
+const AppContainer = createAppContainer(TopLevelNavigator);
+
+export default class MainApp extends React.Component<any, any> {
+  render() {
+    return (
+      <AppContainer
+        ref={(navigatorRef: any) => {
+          NavigationService.setTopLevelNavigator(navigatorRef);
+        }}
+      />
+    );
+  }
+}

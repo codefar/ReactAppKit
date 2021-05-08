@@ -41,38 +41,72 @@ export default class FindPage extends React.Component<Props> {
             </View>
           </Swiper>
         </View>
-        <Button
-          title={'Go To MainPage Screen'}
-          onPress={() => {
-            console.log('Go To MainPage Screen');
-            this.props.navigation.push('MainPage', {userId: '333999'});
-          }}
-        />
-        <Button
-          title={'Go To Profile Screen'}
-          onPress={() => {
-            console.log('Go To Profile Screen');
-            this.props.navigation.push('ProfileScreen', {userId: '333999'});
-          }}
-        />
-        <Button
-          title={'Go To MobxPage Screen'}
-          onPress={() => {
-            this.props.navigation.push('MobxApp');
-          }}
-        />
-        <Button
-          title={'Go To OrientationPage Screen'}
-          onPress={() => {
-            this.props.navigation.push('OrientationPage', {userId: '333999'});
-          }}
-        />
-        <Button
-          title={'Go To VideoPage Screen'}
-          onPress={() => {
-            this.props.navigation.push('VideoPage');
-          }}
-        />
+        <View style={{margin: 15}}>
+          <Button
+            title={'Swtich To Home Tab'}
+            onPress={() => {
+              console.log('Go To MainPage Screen');
+              this.props.navigation.navigate('Home', {userId: '333999'});
+            }}
+          />
+        </View>
+        <View style={{margin: 15}}>
+          <Button
+            title={'Swtich To Mine Tab'}
+            onPress={() => {
+              console.log('Go To MainPage Screen');
+              this.props.navigation.navigate('Mine', {userId: '333999'});
+            }}
+          />
+        </View>
+        <View style={{margin: 15}}>
+          <Button
+            title={'Go To Other Screen'}
+            onPress={() => {
+              console.log('Go To MainPage Screen');
+              this.props.navigation
+                ?.dangerouslyGetParent()
+                ?.navigate('BusinessApp');
+              // this.props.navigation.navigate('MainPage', {userId: '333999'});
+            }}
+          />
+        </View>
+        <View style={{margin: 15}}>
+          <Button
+            title={'Go To Video Screen'}
+            onPress={() => {
+              console.log('Go To Video Screen');
+              this.props.navigation
+                ?.dangerouslyGetParent()
+                ?.navigate('VideoPage');
+              // this.props.navigation.navigate('MainPage', {userId: '333999'});
+            }}
+          />
+        </View>
+        <View style={{margin: 15}}>
+          <Button
+            title={'Go To Video Player'}
+            onPress={() => {
+              console.log('Go To Video Player');
+              this.props.navigation
+                ?.dangerouslyGetParent()
+                ?.navigate('VideoPlayer');
+              // this.props.navigation.navigate('MainPage', {userId: '333999'});
+            }}
+          />
+        </View>
+        <View style={{margin: 15}}>
+          <Button
+            title={'Go To Business Screen'}
+            onPress={() => {
+              console.log('Go To Business Screen');
+              this.props.navigation
+                ?.dangerouslyGetParent()
+                ?.navigate('BusinessApp');
+              // this.props.navigation.navigate('MainPage', {userId: '333999'});
+            }}
+          />
+        </View>
       </View>
     );
   }

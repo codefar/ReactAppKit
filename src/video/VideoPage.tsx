@@ -19,10 +19,6 @@ export default class VideoPage extends React.Component {
   @observable
   orientation: Orientation.orientation | null = Orientation.getInitialOrientation();
 
-  constructor() {
-    super(arguments);
-  }
-
   componentDidMount() {
     Orientation.lockToPortrait();
     console.log('VideoPage componentDidMount ' + this.orientation);
@@ -30,7 +26,8 @@ export default class VideoPage extends React.Component {
       (orientation: Orientation.orientation) => {
         console.log('addOrientationListener ' + orientation);
         this.changeOrientation(orientation);
-    })
+      },
+    );
   }
 
   @action

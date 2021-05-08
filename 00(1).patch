@@ -1,0 +1,1331 @@
+From 58768ab9ba58e89310f9fd1013bb80c1c7ecfe02 Mon Sep 17 00:00:00 2001
+From: wangyonghua <wangyonghua@meituan.com>
+Date: Thu, 6 May 2021 10:34:46 +0800
+Subject: [PATCH] main
+
+---
+ android/app/build.gradle                      |   1 -
+ index.js                                      |   1 +
+ package-lock.json                             |  24 ++--
+ package.json                                  |   5 +-
+ src/App.tsx                                   |  14 +-
+ src/business/BusinessApp.tsx                  |  58 ++++++++
+ src/business/BusinessIndexPage.tsx            |  78 +++++++++++
+ src/{main/mine => }/business/IconListPage.tsx |   0
+ src/{main/mine => }/business/MobxPage.tsx     |   0
+ .../mine => }/business/OrientationPage.tsx    |   0
+ src/{main/mine => }/business/ProfilePage.tsx  |   0
+ src/{main/mine => }/business/SignOutPage.tsx  |   0
+ src/login/AuthApp.tsx                         |   8 +-
+ src/login/AuthLoadingScreen.tsx               |  22 +--
+ src/main/MainApp.tsx                          | 120 ++++++++++-------
+ src/main/find/FindPage.tsx                    |  98 +++++++++-----
+ src/main/home/HomePage.tsx                    |  68 +++-------
+ src/main/mine/MineApp.tsx                     |  52 --------
+ src/main/mine/MinePage.tsx                    |  57 +++-----
+ src/product/ProductList.tsx                   |   0
+ src/splash/SplashPage.tsx                     |   2 +-
+ src/video/MediaControls.tsx                   | 125 ++++++++++++++++++
+ .../mine/business => video}/VideoPage.tsx     |   7 +-
+ .../mine/business => video}/VideoPlayer.tsx   |   5 +-
+ src/video/VideoPlayerController.tsx           |  56 ++++++++
+ .../mine/business => video}/broadchurch.mp4   | Bin
+ src/video/react-native-video-controls.d.ts    |   1 +
+ yarn.lock                                     |  35 ++++-
+ 28 files changed, 573 insertions(+), 264 deletions(-)
+ create mode 100644 src/business/BusinessApp.tsx
+ create mode 100644 src/business/BusinessIndexPage.tsx
+ rename src/{main/mine => }/business/IconListPage.tsx (100%)
+ rename src/{main/mine => }/business/MobxPage.tsx (100%)
+ rename src/{main/mine => }/business/OrientationPage.tsx (100%)
+ rename src/{main/mine => }/business/ProfilePage.tsx (100%)
+ rename src/{main/mine => }/business/SignOutPage.tsx (100%)
+ delete mode 100644 src/main/mine/MineApp.tsx
+ delete mode 100644 src/product/ProductList.tsx
+ create mode 100644 src/video/MediaControls.tsx
+ rename src/{main/mine/business => video}/VideoPage.tsx (98%)
+ rename src/{main/mine/business => video}/VideoPlayer.tsx (98%)
+ create mode 100644 src/video/VideoPlayerController.tsx
+ rename src/{main/mine/business => video}/broadchurch.mp4 (100%)
+ create mode 100644 src/video/react-native-video-controls.d.ts
+
+diff --git a/android/app/build.gradle b/android/app/build.gradle
+index 2e932cc..09fa6b0 100644
+--- a/android/app/build.gradle
++++ b/android/app/build.gradle
+@@ -163,7 +163,6 @@ android {
+     }
+     buildTypes {
+         debug {
+-            applicationIdSuffix ".debug"
+             signingConfig signingConfigs.debug
+         }
+         release {
+diff --git a/index.js b/index.js
+index b76d816..5249258 100644
+--- a/index.js
++++ b/index.js
+@@ -2,6 +2,7 @@ import 'react-native-gesture-handler';
+ import {AppRegistry} from 'react-native';
+ import App from './src/App';
+ import MainApp from './src/main/MainApp';
++import AuthApp from './src/login/AuthApp';
+ // import AuthApp from './src/login/AuthApp';
+ 
+ AppRegistry.registerComponent('MyApp', () => MainApp);
+diff --git a/package-lock.json b/package-lock.json
+index e7f216d..624d8cb 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -3319,8 +3319,8 @@
+     },
+     "eme-encryption-scheme-polyfill": {
+       "version": "2.0.3",
+-      "resolved": "https://registry.npmjs.org/eme-encryption-scheme-polyfill/-/eme-encryption-scheme-polyfill-2.0.3.tgz",
+-      "integrity": "sha512-44CNFMsqzHdKHrzWxlS7xZ8KUHn5XutBqpmCuWzNIynmAyFInHrrD3ozv/RvK9ZhgV6QY6Easx8EWAmxteNodg=="
++      "resolved": "https://registry.nlark.com/eme-encryption-scheme-polyfill/download/eme-encryption-scheme-polyfill-2.0.3.tgz",
++      "integrity": "sha1-LKbgZIDgbM615Q79J5Q6xGyVmHg="
+     },
+     "emittery": {
+       "version": "0.7.2",
+@@ -5473,8 +5473,8 @@
+     },
+     "jetifier": {
+       "version": "1.6.6",
+-      "resolved": "https://registry.npmjs.org/jetifier/-/jetifier-1.6.6.tgz",
+-      "integrity": "sha512-JNAkmPeB/GS2tCRqUzRPsTOHpGDah7xP18vGJfIjZC+W2sxEHbxgJxetIjIqhjQ3yYbYNEELkM/spKLtwoOSUQ=="
++      "resolved": "https://registry.npm.taobao.org/jetifier/download/jetifier-1.6.6.tgz",
++      "integrity": "sha1-/si/92EhREwS3DjS2tZ2fEIdq2g="
+     },
+     "joi": {
+       "version": "17.4.0",
+@@ -5766,7 +5766,7 @@
+     },
+     "keymirror": {
+       "version": "0.1.1",
+-      "resolved": "https://registry.npmjs.org/keymirror/-/keymirror-0.1.1.tgz",
++      "resolved": "https://registry.npm.taobao.org/keymirror/download/keymirror-0.1.1.tgz",
+       "integrity": "sha1-kYiJ6hP40KQufFVyUO7nE63JXDU="
+     },
+     "kind-of": {
+@@ -7537,6 +7537,14 @@
+         "shaka-player": "^2.5.9"
+       }
+     },
++    "react-native-video-controls": {
++      "version": "2.7.1",
++      "resolved": "https://registry.npm.taobao.org/react-native-video-controls/download/react-native-video-controls-2.7.1.tgz",
++      "integrity": "sha1-Ur0i6oOpZMm/HnQeftY4CtDijx4=",
++      "requires": {
++        "lodash": "^4.16.4"
++      }
++    },
+     "react-navigation": {
+       "version": "4.4.4",
+       "resolved": "https://registry.npm.taobao.org/react-navigation/download/react-navigation-4.4.4.tgz",
+@@ -8183,9 +8191,9 @@
+       "integrity": "sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw=="
+     },
+     "shaka-player": {
+-      "version": "2.5.21",
+-      "resolved": "https://registry.npmjs.org/shaka-player/-/shaka-player-2.5.21.tgz",
+-      "integrity": "sha512-7LCadr8ohzMaiagWTzV3HzdSBlpswFUWBet2J4WtNr3Z1C3jzKhdjAgNjPPWwypdaAfM2lN+3ez9LKp9wRyH0w==",
++      "version": "2.5.22",
++      "resolved": "https://registry.nlark.com/shaka-player/download/shaka-player-2.5.22.tgz",
++      "integrity": "sha1-ZLRUe3QrKjoCK+n74GhtlE+dAwA=",
+       "requires": {
+         "eme-encryption-scheme-polyfill": "^2.0.1"
+       }
+diff --git a/package.json b/package.json
+index 5528a78..7cbdbd7 100644
+--- a/package.json
++++ b/package.json
+@@ -12,22 +12,24 @@
+   "dependencies": {
+     "@react-native-async-storage/async-storage": "^1.15.4",
+     "@react-native-community/masked-view": "^0.1.10",
+-    "@types/react-native-snap-carousel": "^3.8.2",
+     "mobx": "^5.5.0",
+     "mobx-react": "^5.2.8",
+     "mobx-state-tree": "^3.5.0",
+     "react": "17.0.1",
+     "react-native": "0.64.0",
+     "react-native-gesture-handler": "^1.10.3",
++    "react-native-media-controls": "^2.3.0",
+     "react-native-orientation": "^3.1.3",
+     "react-native-reanimated": "^2.1.0",
+     "react-native-safe-area-context": "^3.2.0",
+     "react-native-screens": "^3.1.1",
++    "react-native-slider": "^0.11.0",
+     "react-native-snap-carousel": "^3.9.1",
+     "react-native-splash-screen": "^3.2.0",
+     "react-native-swiper": "^1.6.0",
+     "react-native-vector-icons": "^8.1.0",
+     "react-native-video": "^5.1.1",
++    "react-native-video-controls": "^2.7.1",
+     "react-navigation": "^4.4.4",
+     "react-navigation-stack": "^2.10.4",
+     "react-navigation-tabs": "^2.11.1",
+@@ -48,6 +50,7 @@
+     "babel-plugin-transform-decorators-legacy": "^1.3.5",
+     "eslint": "^7.14.0",
+     "jest": "^26.6.3",
++    "jetifier": "^1.6.6",
+     "metro-react-native-babel-preset": "^0.64.0",
+     "react-test-renderer": "17.0.1",
+     "typescript": "^3.8.3"
+diff --git a/src/App.tsx b/src/App.tsx
+index d045cf6..9af9a41 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,11 +1,8 @@
+-import {createAppContainer} from 'react-navigation';
+-import {createStackNavigator} from 'react-navigation-stack';
++import {createAppContainer, createSwitchNavigator} from 'react-navigation';
+ import AuthApp from './login/AuthApp';
+-import React from 'react';
+-// import SplashScreen from 'react-native-splash-screen';
+ import SplashPage from './splash/SplashPage';
+ 
+-const AppNavigator = createStackNavigator(
++const AppNavigator = createSwitchNavigator(
+   {
+     AuthApp: {
+       screen: AuthApp,
+@@ -15,8 +12,7 @@ const AppNavigator = createStackNavigator(
+     },
+   },
+   {
+-    initialRouteName: 'AuthApp',
+-    headerMode: 'none',
++    initialRouteName: 'SplashPage',
+     defaultNavigationOptions: {
+       // gestureEnabled: true,
+       // cardOverlayEnabled: true,
+@@ -25,6 +21,4 @@ const AppNavigator = createStackNavigator(
+   },
+ );
+ 
+-const AppContainer = createAppContainer(AppNavigator);
+-
+-export default AppContainer;
++export default createAppContainer(AppNavigator);
+diff --git a/src/business/BusinessApp.tsx b/src/business/BusinessApp.tsx
+new file mode 100644
+index 0000000..4524f21
+--- /dev/null
++++ b/src/business/BusinessApp.tsx
+@@ -0,0 +1,58 @@
++import {
++  createStackNavigator,
++  NavigationStackProp,
++  TransitionPresets,
++} from 'react-navigation-stack';
++import MobxPage from './MobxPage';
++import ProfilePage from './ProfilePage';
++import OrientationPage from './OrientationPage';
++import SignOutPage from './SignOutPage';
++import IconListPage from './IconListPage';
++import React from 'react';
++import {createAppContainer} from 'react-navigation';
++import BusinessIndexPage from './BusinessIndexPage';
++
++const AppNavigator = createStackNavigator(
++  {
++    BusinessIndexPage: {
++      screen: BusinessIndexPage,
++    },
++    MobxApp: {
++      screen: MobxPage,
++    },
++    IconListPage: {
++      screen: IconListPage,
++    },
++    ProfileScreen: {
++      screen: ProfilePage,
++    },
++    OrientationPage: {
++      screen: OrientationPage,
++    },
++    SignOutPage: {
++      screen: SignOutPage,
++    },
++  },
++  {
++    initialRouteName: 'BusinessIndexPage',
++    headerMode: 'none',
++    defaultNavigationOptions: {
++      gestureEnabled: true,
++      cardOverlayEnabled: true,
++      ...TransitionPresets.SlideFromRightIOS,
++    },
++  },
++);
++
++// export default AppNavigator;
++const BusinessAppContainer = createAppContainer(AppNavigator);
++
++interface Props {
++  navigation: NavigationStackProp<{}>;
++}
++
++export default class BusinessApp extends React.Component<Props> {
++  render() {
++    return <BusinessAppContainer />;
++  }
++}
+diff --git a/src/business/BusinessIndexPage.tsx b/src/business/BusinessIndexPage.tsx
+new file mode 100644
+index 0000000..984baf2
+--- /dev/null
++++ b/src/business/BusinessIndexPage.tsx
+@@ -0,0 +1,78 @@
++import {NavigationStackProp} from 'react-navigation-stack';
++import React from 'react';
++import {Button, StyleSheet, Text, View} from 'react-native';
++
++interface Props {
++  navigation: NavigationStackProp<{}>;
++}
++
++export default class BusinessIndexPage extends React.Component<Props> {
++  render() {
++    return (
++      <View style={styles.container}>
++        <Text>Home Screen</Text>
++        <View style={{margin: 15}}>
++          <Button
++            title={'Switch To IconListPage'}
++            onPress={() => {
++              this.props.navigation.push('IconListPage');
++            }}
++          />
++        </View>
++        <View style={{margin: 15}}>
++          <Button
++            title={'Switch To MobxApp'}
++            onPress={() => {
++              this.props.navigation.push('MobxApp');
++            }}
++          />
++        </View>
++        <View style={{margin: 15}}>
++          <Button
++            title={'Switch To OrientationPage'}
++            onPress={() => {
++              this.props.navigation.push('OrientationPage');
++            }}
++          />
++        </View>
++        <View style={{margin: 15}}>
++          <Button
++            title={'Switch To ProfileScreen'}
++            onPress={() => {
++              this.props.navigation.push('ProfileScreen');
++            }}
++          />
++        </View>
++        <View style={{margin: 15}}>
++          <Button
++            title={'Switch To SignOutPage'}
++            onPress={() => {
++              console.log(this.props.navigation);
++              this.props.navigation.push('SignOutPage');
++            }}
++          />
++        </View>
++      </View>
++    );
++  }
++}
++
++const styles = StyleSheet.create({
++  container: {
++    flex: 1,
++    flexDirection: 'column',
++    justifyContent: 'center',
++    alignItems: 'center',
++  },
++  slide: {
++    height: 375,
++    backgroundColor: '#ffffff',
++    flex: 1,
++  },
++  title: {
++    justifyContent: 'center',
++    alignItems: 'center',
++    height: 375,
++    flex: 1,
++  },
++});
+diff --git a/src/main/mine/business/IconListPage.tsx b/src/business/IconListPage.tsx
+similarity index 100%
+rename from src/main/mine/business/IconListPage.tsx
+rename to src/business/IconListPage.tsx
+diff --git a/src/main/mine/business/MobxPage.tsx b/src/business/MobxPage.tsx
+similarity index 100%
+rename from src/main/mine/business/MobxPage.tsx
+rename to src/business/MobxPage.tsx
+diff --git a/src/main/mine/business/OrientationPage.tsx b/src/business/OrientationPage.tsx
+similarity index 100%
+rename from src/main/mine/business/OrientationPage.tsx
+rename to src/business/OrientationPage.tsx
+diff --git a/src/main/mine/business/ProfilePage.tsx b/src/business/ProfilePage.tsx
+similarity index 100%
+rename from src/main/mine/business/ProfilePage.tsx
+rename to src/business/ProfilePage.tsx
+diff --git a/src/main/mine/business/SignOutPage.tsx b/src/business/SignOutPage.tsx
+similarity index 100%
+rename from src/main/mine/business/SignOutPage.tsx
+rename to src/business/SignOutPage.tsx
+diff --git a/src/login/AuthApp.tsx b/src/login/AuthApp.tsx
+index e3b2cd4..0992462 100644
+--- a/src/login/AuthApp.tsx
++++ b/src/login/AuthApp.tsx
+@@ -16,15 +16,15 @@ const AuthStack = createStackNavigator(
+   },
+ );
+ 
+-export default createSwitchNavigator(
++const AutoSwitch = createSwitchNavigator(
+   {
+     AuthLoading: AuthLoadingScreen,
+-    App: MainApp,
+-    Auth: AuthStack,
++    MainApp: MainApp,
++    AuthStack: AuthStack,
+   },
+   {
+     initialRouteName: 'AuthLoading',
+   },
+ );
+ 
+-// export default createAppContainer(SwitchNavigator);
++export default createAppContainer(AutoSwitch);
+diff --git a/src/login/AuthLoadingScreen.tsx b/src/login/AuthLoadingScreen.tsx
+index d77576c..15ddb12 100644
+--- a/src/login/AuthLoadingScreen.tsx
++++ b/src/login/AuthLoadingScreen.tsx
+@@ -1,6 +1,6 @@
+ import React from 'react';
+ import AsyncStorage from '@react-native-async-storage/async-storage';
+-import {Button, View} from 'react-native';
++import {ActivityIndicator, Button, View} from 'react-native';
+ import {StackNavigationProp} from 'react-navigation-stack/lib/typescript/src/vendor/types';
+ import {NavigationParams, NavigationState} from 'react-navigation';
+ 
+@@ -12,17 +12,16 @@ export default class AuthLoadingScreen extends React.Component<Props> {
+   constructor(props: Props) {
+     super(props);
+     console.log('AuthLoadingScreen ' + Date.now());
+-    this._bootstrapAsync().then(
+-      _r => {},
+-      () => {},
+-    );
++    this._bootstrapAsync();
+   }
+ 
+-  _bootstrapAsync = async () => {
+-    const userToken = await AsyncStorage.getItem('userToken');
+-    console.log('AuthLoadingScreen1 ' + userToken);
+-    this.props.navigation.navigate(userToken ? 'App' : 'Auth');
+-    console.log('AuthLoadingScreen2 ' + Date.now());
++  _bootstrapAsync = () => {
++    setTimeout(() => {
++      const userToken = AsyncStorage.getItem('userToken');
++      console.log('AuthLoadingScreen1 ' + userToken);
++      this.props.navigation.navigate(userToken ? 'MainApp' : 'AuthStack');
++      console.log('AuthLoadingScreen2 ' + Date.now());
++    }, 2000);
+   };
+ 
+   render() {
+@@ -34,8 +33,9 @@ export default class AuthLoadingScreen extends React.Component<Props> {
+           justifyContent: 'center',
+           alignItems: 'center',
+         }}>
++        <ActivityIndicator />
+         <Button
+-          title={'Push'}
++          title={'AuthLoadingScreen'}
+           onPress={() => {
+             this.props.navigation.navigate('Auth');
+           }}
+diff --git a/src/main/MainApp.tsx b/src/main/MainApp.tsx
+index da762c0..aae6ca6 100644
+--- a/src/main/MainApp.tsx
++++ b/src/main/MainApp.tsx
+@@ -1,15 +1,18 @@
+-import {createAppContainer} from 'react-navigation';
++import {createStackNavigator, TransitionPresets} from 'react-navigation-stack';
++import VideoPage from '../video/VideoPage';
++import BusinessApp from '../business/BusinessApp';
++import VideoPlayer from '../video/VideoPlayer';
+ import {createBottomTabNavigator} from 'react-navigation-tabs';
+-import Ionicons from 'react-native-vector-icons/AntDesign';
+-import React from 'react';
+-// import {createStackNavigator, TransitionPresets} from 'react-navigation-stack';
+-// import MobxPage from './mine/business/MobxPage';
+-// import ProfilePage from './mine/business/ProfilePage';
+-// import OrientationPage from './mine/business/OrientationPage';
+-// import VideoPage from './mine/business/VideoPage';
+-import MineApp from './mine/MineApp';
+ import HomePage from './home/HomePage';
+ import FindPage from './find/FindPage';
++import MinePage from './mine/MinePage';
++import {View} from 'react-native';
++import AntDesign from 'react-native-vector-icons/AntDesign';
++import React from 'react';
++import NavigationService from '../NavigationService';
++import {createAppContainer} from 'react-navigation';
++import VideoPlayerController from '../video/VideoPlayerController';
++import MediaControls from '../video/MediaControls';
+ 
+ const MainTabNavigator = createBottomTabNavigator(
+   {
+@@ -25,8 +28,8 @@ const MainTabNavigator = createBottomTabNavigator(
+         tabBarLabel: '发现',
+       },
+     },
+-    MineApp: {
+-      screen: MineApp,
++    Mine: {
++      screen: MinePage,
+       navigationOptions: {
+         tabBarLabel: '我的',
+       },
+@@ -40,12 +43,16 @@ const MainTabNavigator = createBottomTabNavigator(
+         let iconName: string = '';
+         if (routeName === 'Home') {
+           iconName = 'home';
+-        } else if (routeName === 'MineApp') {
++        } else if (routeName === 'Mine') {
+           iconName = 'user';
+         } else if (routeName === 'Find') {
+           iconName = 'find';
+         }
+-        return <Ionicons name={iconName} size={24} color={tintColor} />;
++        return (
++          <View>
++            <AntDesign name={iconName} size={24} color={tintColor} />
++          </View>
++        );
+       },
+     }),
+     tabBarOptions: {
+@@ -55,43 +62,54 @@ const MainTabNavigator = createBottomTabNavigator(
+   },
+ );
+ 
+-const MainTabPage = createAppContainer(MainTabNavigator);
+-
+-export default MainTabPage;
++const TopLevelNavigator = createStackNavigator(
++  {
++    MainTabPage: {
++      screen: MainTabNavigator,
++    },
++    BusinessApp: {
++      screen: BusinessApp,
++    },
++    VideoPlayer: {
++      screen: VideoPlayer,
++    },
++    VideoPlayerController: {
++      screen: VideoPlayerController,
++    },
++    MediaControls: {
++      screen: MediaControls,
++    },
++    VideoPage: {
++      screen: VideoPage,
++      navigationOptions: {
++        // header: null,
++      },
++    },
++  },
++  {
++    initialRouteName: 'MainTabPage',
++    headerMode: 'none',
++    defaultNavigationOptions: {
++      gestureEnabled: true,
++      cardOverlayEnabled: true,
++      ...TransitionPresets.SlideFromRightIOS,
++    },
++  },
++);
+ 
+-// const AppNavigator = createStackNavigator(
+-//   {
+-//     MainTabPage: {
+-//       screen: MainTabPage,
+-//     },
+-//     // HomePage: {
+-//     //   screen: HomePage,
+-//     // },
+-//     // MobxApp: {
+-//     //   screen: MobxPage,
+-//     // },
+-//     // ProfileScreen: {
+-//     //   screen: ProfilePage,
+-//     // },
+-//     // OrientationPage: {
+-//     //   screen: OrientationPage,
+-//     // },
+-//     // VideoPage: {
+-//     //   screen: VideoPage,
+-//     //   navigationOptions: {
+-//     //     // header: null,
+-//     //   },
+-//     // },
+-//   },
+-//   {
+-//     initialRouteName: 'MainTabPage',
+-//     headerMode: 'none',
+-//     defaultNavigationOptions: {
+-//       gestureEnabled: true,
+-//       cardOverlayEnabled: true,
+-//       ...TransitionPresets.SlideFromRightIOS,
+-//     },
+-//   },
+-// );
+-//
++// export default AppNavigator;
+ // export default createAppContainer(AppNavigator);
++
++const AppContainer = createAppContainer(TopLevelNavigator);
++
++export default class MainApp extends React.Component<any, any> {
++  render() {
++    return (
++      <AppContainer
++        ref={(navigatorRef: any) => {
++          NavigationService.setTopLevelNavigator(navigatorRef);
++        }}
++      />
++    );
++  }
++}
+diff --git a/src/main/find/FindPage.tsx b/src/main/find/FindPage.tsx
+index d335014..ffe805e 100644
+--- a/src/main/find/FindPage.tsx
++++ b/src/main/find/FindPage.tsx
+@@ -41,38 +41,72 @@ export default class FindPage extends React.Component<Props> {
+             </View>
+           </Swiper>
+         </View>
+-        <Button
+-          title={'Go To MainPage Screen'}
+-          onPress={() => {
+-            console.log('Go To MainPage Screen');
+-            this.props.navigation.push('MainPage', {userId: '333999'});
+-          }}
+-        />
+-        <Button
+-          title={'Go To Profile Screen'}
+-          onPress={() => {
+-            console.log('Go To Profile Screen');
+-            this.props.navigation.push('ProfileScreen', {userId: '333999'});
+-          }}
+-        />
+-        <Button
+-          title={'Go To MobxPage Screen'}
+-          onPress={() => {
+-            this.props.navigation.push('MobxApp');
+-          }}
+-        />
+-        <Button
+-          title={'Go To OrientationPage Screen'}
+-          onPress={() => {
+-            this.props.navigation.push('OrientationPage', {userId: '333999'});
+-          }}
+-        />
+-        <Button
+-          title={'Go To VideoPage Screen'}
+-          onPress={() => {
+-            this.props.navigation.push('VideoPage');
+-          }}
+-        />
++        <View style={{margin: 15}}>
++          <Button
++            title={'Swtich To Home Tab'}
++            onPress={() => {
++              console.log('Go To MainPage Screen');
++              this.props.navigation.navigate('Home', {userId: '333999'});
++            }}
++          />
++        </View>
++        <View style={{margin: 15}}>
++          <Button
++            title={'Swtich To Mine Tab'}
++            onPress={() => {
++              console.log('Go To MainPage Screen');
++              this.props.navigation.navigate('Mine', {userId: '333999'});
++            }}
++          />
++        </View>
++        <View style={{margin: 15}}>
++          <Button
++            title={'Go To Other Screen'}
++            onPress={() => {
++              console.log('Go To MainPage Screen');
++              this.props.navigation
++                ?.dangerouslyGetParent()
++                ?.navigate('BusinessApp');
++              // this.props.navigation.navigate('MainPage', {userId: '333999'});
++            }}
++          />
++        </View>
++        <View style={{margin: 15}}>
++          <Button
++            title={'Go To Video Screen'}
++            onPress={() => {
++              console.log('Go To Video Screen');
++              this.props.navigation
++                ?.dangerouslyGetParent()
++                ?.navigate('VideoPage');
++              // this.props.navigation.navigate('MainPage', {userId: '333999'});
++            }}
++          />
++        </View>
++        <View style={{margin: 15}}>
++          <Button
++            title={'Go To Video Player'}
++            onPress={() => {
++              console.log('Go To Video Player');
++              this.props.navigation
++                ?.dangerouslyGetParent()
++                ?.navigate('VideoPlayer');
++              // this.props.navigation.navigate('MainPage', {userId: '333999'});
++            }}
++          />
++        </View>
++        <View style={{margin: 15}}>
++          <Button
++            title={'Go To Business Screen'}
++            onPress={() => {
++              console.log('Go To Business Screen');
++              this.props.navigation
++                ?.dangerouslyGetParent()
++                ?.navigate('BusinessApp');
++              // this.props.navigation.navigate('MainPage', {userId: '333999'});
++            }}
++          />
++        </View>
+       </View>
+     );
+   }
+diff --git a/src/main/home/HomePage.tsx b/src/main/home/HomePage.tsx
+index 18ceed4..acc0dbf 100644
+--- a/src/main/home/HomePage.tsx
++++ b/src/main/home/HomePage.tsx
+@@ -3,59 +3,32 @@ import {Button, StyleSheet, Text, View} from 'react-native';
+ import {NavigationStackProp} from 'react-navigation-stack';
+ import {NavigationParams, NavigationRoute} from 'react-navigation';
+ 
+-// eslint-disable-next-line no-undef
+-
+ interface Props {
+   navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
+ }
+ 
+-// const DATA = ['HomePage', 'Props', 'Home'];
+-
+ export default class HomePage extends React.Component<Props> {
+-  _renderItem = (item: {item: string; index: number}) => {
+-    return (
+-      <View style={styles.slide}>
+-        <Text style={styles.title}>{item.item}</Text>
+-      </View>
+-    );
+-  };
++  // _renderItem = (item: {item: string; index: number}) => {
++  //   return (
++  //     <View style={styles.slide}>
++  //       <Text style={styles.title}>{item.item}</Text>
++  //     </View>
++  //   );
++  // };
+ 
+   render() {
+     return (
+-      <View style={{flex: 1, flexDirection: 'column', alignItems: 'center'}}>
++      <View style={styles.container}>
+         <Text>Home Screen</Text>
+-        <Button
+-          title={'Go To MainPage Screen'}
+-          onPress={() => {
+-            console.log('Go To MainPage Screen');
+-            this.props.navigation.push('MainPage', {userId: '333999'});
+-          }}
+-        />
+-        <Button
+-          title={'Go To Profile Screen'}
+-          onPress={() => {
+-            console.log('Go To Profile Screen');
+-            this.props.navigation.push('ProfileScreen', {userId: '333999'});
+-          }}
+-        />
+-        <Button
+-          title={'Go To MobxPage Screen'}
+-          onPress={() => {
+-            this.props.navigation.push('MobxApp');
+-          }}
+-        />
+-        <Button
+-          title={'Go To OrientationPage Screen'}
+-          onPress={() => {
+-            this.props.navigation.push('OrientationPage', {userId: '333999'});
+-          }}
+-        />
+-        <Button
+-          title={'Go To VideoPage Screen'}
+-          onPress={() => {
+-            this.props.navigation.push('VideoPage');
+-          }}
+-        />
++        <View style={{margin: 15}}>
++          <Button
++            title={'Switch To Find Tab'}
++            onPress={() => {
++              console.log(this.props.navigation);
++              this.props.navigation.navigate('Find', {userId: '333999'});
++            }}
++          />
++        </View>
+       </View>
+     );
+   }
+@@ -63,9 +36,10 @@ export default class HomePage extends React.Component<Props> {
+ 
+ const styles = StyleSheet.create({
+   container: {
+-    height: 175,
+-    padding: 15,
+-    backgroundColor: 'gray',
++    flex: 1,
++    flexDirection: 'column',
++    justifyContent: 'center',
++    alignItems: 'center',
+   },
+   slide: {
+     height: 375,
+diff --git a/src/main/mine/MineApp.tsx b/src/main/mine/MineApp.tsx
+deleted file mode 100644
+index ebd9f1e..0000000
+--- a/src/main/mine/MineApp.tsx
++++ /dev/null
+@@ -1,52 +0,0 @@
+-import {createStackNavigator, TransitionPresets} from 'react-navigation-stack';
+-import {createAppContainer} from 'react-navigation';
+-import MobxPage from './business/MobxPage';
+-import ProfilePage from './business/ProfilePage';
+-import OrientationPage from './business/OrientationPage';
+-import VideoPage from './business/VideoPage';
+-import MinePage from './MinePage';
+-import SignOutPage from './business/SignOutPage';
+-import VideoPlayer from "./business/VideoPlayer";
+-
+-const AppNavigator = createStackNavigator(
+-  {
+-    MinePage: {
+-      screen: MinePage,
+-    },
+-    MobxApp: {
+-      screen: MobxPage,
+-    },
+-    ProfileScreen: {
+-      screen: ProfilePage,
+-    },
+-    OrientationPage: {
+-      screen: OrientationPage,
+-    },
+-    SignOutScreen: {
+-      screen: SignOutPage,
+-    },
+-    VideoPage: {
+-      screen: VideoPage,
+-      navigationOptions: {
+-        // header: null,
+-      },
+-    },
+-    VideoPlayer: {
+-      screen: VideoPlayer,
+-      navigationOptions: {
+-        // header: null,
+-      },
+-    },
+-  },
+-  {
+-    initialRouteName: 'MinePage',
+-    headerMode: 'none',
+-    defaultNavigationOptions: {
+-      gestureEnabled: true,
+-      cardOverlayEnabled: true,
+-      ...TransitionPresets.SlideFromRightIOS,
+-    },
+-  },
+-);
+-
+-export default createAppContainer(AppNavigator);
+diff --git a/src/main/mine/MinePage.tsx b/src/main/mine/MinePage.tsx
+index ef13f9b..aa55d70 100644
+--- a/src/main/mine/MinePage.tsx
++++ b/src/main/mine/MinePage.tsx
+@@ -1,7 +1,8 @@
+ import React from 'react';
+-import {Button, View} from 'react-native';
++import {Button, StyleSheet, Text, View} from 'react-native';
+ import {NavigationStackProp} from 'react-navigation-stack';
+ import {NavigationParams, NavigationRoute} from 'react-navigation';
++import NavigationService from '../../NavigationService';
+ 
+ interface Props {
+   navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
+@@ -10,52 +11,29 @@ interface Props {
+ export default class MinePage extends React.Component<Props> {
+   render() {
+     return (
+-      <View style={{flex: 1, flexDirection: 'column', alignItems: 'center'}}>
+-        <View style={{margin: 5}}>
++      <View style={styles.container}>
++        <Text>MinePage Screen</Text>
++        <View style={{margin: 15}}>
+           <Button
+-            title={'IconListPage'}
++            title={'Switch To Find Tab'}
+             onPress={() => {
+-              this.props.navigation.push('IconListPage');
++              NavigationService.navigate('Find', {userId: '333999'});
+             }}
+           />
+         </View>
+-        <View style={{margin: 5}}>
++        <View style={{margin: 15}}>
+           <Button
+-            title={'VideoPlayer App'}
++            title={'Switch To VideoPlayerController'}
+             onPress={() => {
+-              this.props.navigation.push('VideoPlayer');
++              NavigationService.navigate('VideoPlayerController', {});
+             }}
+           />
+         </View>
+-        <View style={{margin: 5}}>
++        <View style={{margin: 15}}>
+           <Button
+-            title={'OrientationPage App'}
++            title={'Switch To MediaControls'}
+             onPress={() => {
+-              this.props.navigation.push('OrientationPage');
+-            }}
+-          />
+-        </View>
+-        <View style={{margin: 5}}>
+-          <Button
+-            title={'Profile App'}
+-            onPress={() => {
+-              this.props.navigation.push('ProfileScreen');
+-            }}
+-          />
+-        </View>
+-        <View style={{margin: 5}}>
+-          <Button
+-            title={'VideoPage App'}
+-            onPress={() => {
+-              this.props.navigation.push('VideoPage');
+-            }}
+-          />
+-        </View>
+-        <View style={{margin: 5}}>
+-          <Button
+-            title={'SignOutPage App'}
+-            onPress={() => {
+-              this.props.navigation.push('SignOutScreen');
++              NavigationService.navigate('MediaControls', {});
+             }}
+           />
+         </View>
+@@ -63,3 +41,12 @@ export default class MinePage extends React.Component<Props> {
+     );
+   }
+ }
++
++const styles = StyleSheet.create({
++  container: {
++    flex: 1,
++    flexDirection: 'column',
++    justifyContent: 'center',
++    alignItems: 'center',
++  },
++});
+diff --git a/src/product/ProductList.tsx b/src/product/ProductList.tsx
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/src/splash/SplashPage.tsx b/src/splash/SplashPage.tsx
+index 7d10c8b..ba0fc0a 100644
+--- a/src/splash/SplashPage.tsx
++++ b/src/splash/SplashPage.tsx
+@@ -19,7 +19,7 @@ export default function SplashPage(props: Props) {
+       <Button
+         title={'Splash Page'}
+         onPress={() => {
+-          props.navigation.replace('AuthApp');
++          props.navigation.navigate('AuthApp');
+         }}
+       />
+     </View>
+diff --git a/src/video/MediaControls.tsx b/src/video/MediaControls.tsx
+new file mode 100644
+index 0000000..5279b95
+--- /dev/null
++++ b/src/video/MediaControls.tsx
+@@ -0,0 +1,125 @@
++import React, {useState, useRef, MutableRefObject} from 'react';
++import {StyleSheet, Text, View} from 'react-native';
++import Video, {OnLoadData, OnProgressData} from 'react-native-video';
++import MediaControls, {PLAYER_STATES} from 'react-native-media-controls';
++
++const noop = () => {};
++
++const App = () => {
++  const videoPlayer: MutableRefObject<Video | null> = useRef(null);
++  const [currentTime, setCurrentTime] = useState(0);
++  const [duration, setDuration] = useState(0);
++  // eslint-disable-next-line @typescript-eslint/no-unused-vars
++  const [isFullScreen, setIsFullScreen] = useState(false);
++  const [isLoading, setIsLoading] = useState(true);
++  const [paused, setPaused] = useState(false);
++  const [playerState, setPlayerState] = useState(PLAYER_STATES.PLAYING);
++
++  const onSeek = (seek: number) => {
++    // @ts-ignore
++    videoPlayer?.current.seek(seek);
++  };
++
++  const onPaused = (playerState: number) => {
++    setPaused(!paused);
++    setPlayerState(playerState);
++  };
++
++  const onReplay = () => {
++    setPlayerState(PLAYER_STATES.PLAYING);
++    // @ts-ignore
++    videoPlayer?.current.seek(0);
++  };
++
++  const onProgress = (data: OnProgressData) => {
++    // Video Player will continue progress even if the video already ended
++    if (!isLoading) {
++      setCurrentTime(data.currentTime);
++    }
++  };
++
++  const onLoad = (data: OnLoadData) => {
++    setDuration(data.duration);
++    setIsLoading(false);
++  };
++
++  const onLoadStart = () => setIsLoading(true);
++
++  const onEnd = () => {
++    // Uncomment this line if you choose repeat=false in the video player
++    // setPlayerState(PLAYER_STATES.ENDED);
++  };
++
++  const onSeeking = (currentTime: number) => setCurrentTime(currentTime);
++
++  return (
++    <View style={styles.container}>
++      <Video
++        onEnd={onEnd}
++        onLoad={onLoad}
++        onLoadStart={onLoadStart}
++        onProgress={onProgress}
++        paused={paused}
++        ref={ref => (videoPlayer.current = ref)}
++        resizeMode="cover"
++        source={{
++          uri:
++            'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
++        }}
++        repeat
++        style={styles.backgroundVideo}
++        volume={0.0}
++      />
++      <MediaControls
++        containerStyle={{}}
++        isFullScreen={isFullScreen}
++        duration={duration}
++        isLoading={isLoading}
++        mainColor="black"
++        onFullScreen={noop}
++        onPaused={onPaused}
++        onReplay={onReplay}
++        onSeek={onSeek}
++        onSeeking={onSeeking}
++        playerState={playerState}
++        sliderStyle={{containerStyle: {}, thumbStyle: {}, trackStyle: {}}}
++        progress={currentTime}>
++        <MediaControls.Toolbar>
++          <View style={styles.toolbar}>
++            <Text>I'm a custom toolbar </Text>
++          </View>
++        </MediaControls.Toolbar>
++      </MediaControls>
++    </View>
++  );
++};
++
++const styles = StyleSheet.create({
++  backgroundVideo: {
++    height: 250,
++    width: '100%',
++  },
++  mediaControls: {
++    height: '100%',
++    flex: 1,
++    alignSelf: 'center',
++  },
++  container: {
++    flex: 1,
++  },
++  toolbar: {
++    backgroundColor: 'white',
++    padding: 10,
++    borderRadius: 5,
++  },
++  mediaPlayer: {
++    position: 'absolute',
++    top: 0,
++    left: 0,
++    bottom: 0,
++    right: 0,
++    backgroundColor: 'black',
++  },
++});
++
++export default App;
+diff --git a/src/main/mine/business/VideoPage.tsx b/src/video/VideoPage.tsx
+similarity index 98%
+rename from src/main/mine/business/VideoPage.tsx
+rename to src/video/VideoPage.tsx
+index 5231efe..6719c32 100644
+--- a/src/main/mine/business/VideoPage.tsx
++++ b/src/video/VideoPage.tsx
+@@ -19,10 +19,6 @@ export default class VideoPage extends React.Component {
+   @observable
+   orientation: Orientation.orientation | null = Orientation.getInitialOrientation();
+ 
+-  constructor() {
+-    super(arguments);
+-  }
+-
+   componentDidMount() {
+     Orientation.lockToPortrait();
+     console.log('VideoPage componentDidMount ' + this.orientation);
+@@ -30,7 +26,8 @@ export default class VideoPage extends React.Component {
+       (orientation: Orientation.orientation) => {
+         console.log('addOrientationListener ' + orientation);
+         this.changeOrientation(orientation);
+-    })
++      },
++    );
+   }
+ 
+   @action
+diff --git a/src/main/mine/business/VideoPlayer.tsx b/src/video/VideoPlayer.tsx
+similarity index 98%
+rename from src/main/mine/business/VideoPlayer.tsx
+rename to src/video/VideoPlayer.tsx
+index 2b2c6ed..0ad2492 100644
+--- a/src/main/mine/business/VideoPlayer.tsx
++++ b/src/video/VideoPlayer.tsx
+@@ -1,8 +1,8 @@
+ import React, {Component} from 'react';
+ import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+-import Video from 'react-native-video';
+ import {NavigationStackProp} from 'react-navigation-stack';
+ import {NavigationParams, NavigationRoute} from 'react-navigation';
++import Video from 'react-native-video';
+ 
+ interface Props {
+   navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
+@@ -135,8 +135,7 @@ export default class VideoPlayer extends Component<Props, State> {
+               this.video = c;
+             }}
+             source={{
+-              uri:
+-                'https://vd3.bdstatic.com/mda-mbsravd40w3qp0u3/v1-cae/1080p/mda-mbsravd40w3qp0u3.mp4',
++              uri: './broadchurch.mp4',
+             }}
+             onEnd={() => {}}
+             resizeMode="stretch"
+diff --git a/src/video/VideoPlayerController.tsx b/src/video/VideoPlayerController.tsx
+new file mode 100644
+index 0000000..88f4041
+--- /dev/null
++++ b/src/video/VideoPlayerController.tsx
+@@ -0,0 +1,56 @@
++import React, {Component} from 'react';
++import {StyleSheet, View} from 'react-native';
++import {NavigationStackProp} from 'react-navigation-stack';
++import {NavigationParams, NavigationRoute} from 'react-navigation';
++import VideoPlayerControllComponent from 'react-native-video-controls';
++
++interface Props {
++  navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
++}
++
++interface State {
++  rate: number;
++  volume: number;
++  muted: boolean;
++  resizeMode: string;
++  duration: number;
++  currentTime: number;
++  paused: boolean;
++}
++
++export default class VideoPlayerController extends Component<Props, State> {
++  constructor(prop: Props) {
++    super(prop);
++  }
++
++  render() {
++    return (
++      <View style={styles.container}>
++        <VideoPlayerControllComponent
++          style={styles.videoContainer}
++          isFullScreen={false}
++          source={{
++            uri:
++              'https://vd3.bdstatic.com/mda-mbsravd40w3qp0u3/v1-cae/1080p/mda-mbsravd40w3qp0u3.mp4',
++          }}
++          navigator={this.props.navigation}
++        />
++      </View>
++    );
++  }
++}
++
++const styles = StyleSheet.create({
++  container: {
++    flex: 1,
++    flexDirection: 'column',
++    alignItems: 'center',
++    backgroundColor: 'black',
++  },
++  videoContainer: {
++    height: 300,
++    justifyContent: 'center',
++    alignItems: 'center',
++    backgroundColor: 'black',
++  },
++});
+diff --git a/src/main/mine/business/broadchurch.mp4 b/src/video/broadchurch.mp4
+similarity index 100%
+rename from src/main/mine/business/broadchurch.mp4
+rename to src/video/broadchurch.mp4
+diff --git a/src/video/react-native-video-controls.d.ts b/src/video/react-native-video-controls.d.ts
+new file mode 100644
+index 0000000..37ed145
+--- /dev/null
++++ b/src/video/react-native-video-controls.d.ts
+@@ -0,0 +1 @@
++declare module 'react-native-video-controls';
+diff --git a/yarn.lock b/yarn.lock
+index ee98744..efda943 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -1481,6 +1481,11 @@ acorn@^8.1.0:
+   resolved "https://registry.npm.taobao.org/acorn/download/acorn-8.1.0.tgz?cache=0&sync_timestamp=1615305874483&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Facorn%2Fdownload%2Facorn-8.1.0.tgz#52311fd7037ae119cbb134309e901aa46295b3fe"
+   integrity sha1-UjEf1wN64RnLsTQwnpAapGKVs/4=
+ 
++add@^2.0.6:
++  version "2.0.6"
++  resolved "https://registry.npm.taobao.org/add/download/add-2.0.6.tgz#248f0a9f6e5a528ef2295dbeec30532130ae2235"
++  integrity sha1-JI8Kn25aUo7yKV2+7DBTITCuIjU=
++
+ ajv@^6.10.0, ajv@^6.12.3, ajv@^6.12.4:
+   version "6.12.6"
+   resolved "https://registry.npm.taobao.org/ajv/download/ajv-6.12.6.tgz#baf5a62e802b07d977034586f8c3baf5adf26df4"
+@@ -4316,7 +4321,7 @@ jest@^26.6.3:
+     import-local "^3.0.2"
+     jest-cli "^26.6.3"
+ 
+-jetifier@^1.6.2:
++jetifier@^1.6.2, jetifier@^1.6.6:
+   version "1.6.6"
+   resolved "https://registry.npm.taobao.org/jetifier/download/jetifier-1.6.6.tgz#fec8bff76121444c12dc38d2dad6767c421dab68"
+   integrity sha1-/si/92EhREwS3DjS2tZ2fEIdq2g=
+@@ -4658,7 +4663,7 @@ lodash.truncate@^4.4.2:
+   resolved "https://registry.npm.taobao.org/lodash.truncate/download/lodash.truncate-4.4.2.tgz#5a350da0b1113b837ecfffd5812cbe58d6eae193"
+   integrity sha1-WjUNoLERO4N+z//VgSy+WNbq4ZM=
+ 
+-lodash@^4.17.10, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.21, lodash@^4.17.4, lodash@^4.7.0:
++lodash@^4.16.4, lodash@^4.17.10, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.21, lodash@^4.17.4, lodash@^4.7.0:
+   version "4.17.21"
+   resolved "https://registry.npm.taobao.org/lodash/download/lodash-4.17.21.tgz?cache=0&sync_timestamp=1613835817439&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Flodash%2Fdownload%2Flodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
+   integrity sha1-Z5WRxWTDv/quhFTPCz3zcMPWkRw=
+@@ -5659,7 +5664,7 @@ prompts@^2.0.1, prompts@^2.4.0:
+     kleur "^3.0.3"
+     sisteransi "^1.0.5"
+ 
+-prop-types@^15.5.10, prop-types@^15.6.1, prop-types@^15.7.2:
++prop-types@^15.5.10, prop-types@^15.5.6, prop-types@^15.6.1, prop-types@^15.7.2:
+   version "15.7.2"
+   resolved "https://registry.npm.taobao.org/prop-types/download/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
+   integrity sha1-UsQedbjIfnK52TYOAga5ncv/psU=
+@@ -5762,6 +5767,11 @@ react-native-iphone-x-helper@^1.3.0:
+   resolved "https://registry.npm.taobao.org/react-native-iphone-x-helper/download/react-native-iphone-x-helper-1.3.1.tgz#20c603e9a0e765fd6f97396638bdeb0e5a60b010"
+   integrity sha1-IMYD6aDnZf1vlzlmOL3rDlpgsBA=
+ 
++react-native-media-controls@^2.3.0:
++  version "2.3.0"
++  resolved "https://registry.nlark.com/react-native-media-controls/download/react-native-media-controls-2.3.0.tgz#c36e876a14d12982b7c6fb759201ff439117cbd0"
++  integrity sha1-w26HahTRKYK3xvt1kgH/Q5EXy9A=
++
+ react-native-orientation@^3.1.3:
+   version "3.1.3"
+   resolved "https://registry.npm.taobao.org/react-native-orientation/download/react-native-orientation-3.1.3.tgz#d45803841fe94b6cce9acbe904fd5ca191a3711e"
+@@ -5794,6 +5804,13 @@ react-native-screens@^3.1.1:
+   resolved "https://registry.npm.taobao.org/react-native-screens/download/react-native-screens-3.1.1.tgz#2cd4496c5e3ed1ffbaf77962b8fcc10be3af2158"
+   integrity sha1-LNRJbF4+0f+693liuPzBC+OvIVg=
+ 
++react-native-slider@^0.11.0:
++  version "0.11.0"
++  resolved "https://registry.npm.taobao.org/react-native-slider/download/react-native-slider-0.11.0.tgz#b68a0bc43c8422b24cd57947cc5ac2bcdb58fadc"
++  integrity sha1-tooLxDyEIrJM1XlHzFrCvNtY+tw=
++  dependencies:
++    prop-types "^15.5.6"
++
+ react-native-snap-carousel@^3.9.1:
+   version "3.9.1"
+   resolved "https://registry.nlark.com/react-native-snap-carousel/download/react-native-snap-carousel-3.9.1.tgz#6fd9bd8839546c2c6043a41d2035afbc6fe0443e"
+@@ -5833,6 +5850,13 @@ react-native-vector-icons@^8.1.0:
+     prop-types "^15.7.2"
+     yargs "^16.1.1"
+ 
++react-native-video-controls@^2.7.1:
++  version "2.7.1"
++  resolved "https://registry.npm.taobao.org/react-native-video-controls/download/react-native-video-controls-2.7.1.tgz#52bd22ea83a964c9bf1e741e7ed6380ad0e28f1e"
++  integrity sha1-Ur0i6oOpZMm/HnQeftY4CtDijx4=
++  dependencies:
++    lodash "^4.16.4"
++
+ react-native-video@^5.1.1:
+   version "5.1.1"
+   resolved "https://registry.npm.taobao.org/react-native-video/download/react-native-video-5.1.1.tgz#89a7989efeb8d404611c06154d1da227a745d7d8"
+@@ -7438,3 +7462,8 @@ yargs@^16.1.1:
+     string-width "^4.2.0"
+     y18n "^5.0.5"
+     yargs-parser "^20.2.2"
++
++yarn@^1.22.10:
++  version "1.22.10"
++  resolved "https://registry.npm.taobao.org/yarn/download/yarn-1.22.10.tgz#c99daa06257c80f8fa2c3f1490724e394c26b18c"
++  integrity sha1-yZ2qBiV8gPj6LD8UkHJOOUwmsYw=
+-- 
+2.19.0
+

@@ -1,0 +1,3329 @@
+From b7e3defb2f112bcec54142b1ccf2464f10dfb815 Mon Sep 17 00:00:00 2001
+From: davy <davy@davys-MacBook-Pro.local>
+Date: Sat, 8 May 2021 00:07:54 +0800
+Subject: [PATCH] init m3u8downloader
+
+---
+ android/app/src/main/AndroidManifest.xml      |   6 +-
+ .../main/java/com/myapp/MainApplication.java  |   1 +
+ .../myapp/m3u8downloader/BaseListener.java    |  15 +
+ .../myapp/m3u8downloader/DownloadQueue.java   | 117 +++++
+ .../m3u8downloader/M3U8DownloadTask.java      | 367 +++++++++++++
+ .../myapp/m3u8downloader/M3U8Downloader.java  | 374 +++++++++++++
+ .../m3u8downloader/M3U8DownloaderConfig.java  |  78 +++
+ .../m3u8downloader/M3U8EncryptHelper.java     |  75 +++
+ .../myapp/m3u8downloader/M3U8InfoManger.java  |  73 +++
+ .../m3u8downloader/OnDeleteTaskListener.java  |  26 +
+ .../OnM3U8DownloadListener.java               |  53 ++
+ .../m3u8downloader/OnM3U8InfoListener.java    |  36 ++
+ .../OnTaskDownloadListener.java               |  58 +++
+ .../com/myapp/m3u8downloader/WeakHandler.java | 491 ++++++++++++++++++
+ .../com/myapp/m3u8downloader/bean/M3U8.java   | 113 ++++
+ .../myapp/m3u8downloader/bean/M3U8Task.java   |  86 +++
+ .../m3u8downloader/bean/M3U8TaskState.java    |  21 +
+ .../com/myapp/m3u8downloader/bean/M3U8Ts.java |  86 +++
+ .../server/EncryptM3U8Server.java             |  79 +++
+ .../m3u8downloader/server/M3U8HttpServer.java | 101 ++++
+ .../m3u8downloader/utils/AES128Utils.java     | 122 +++++
+ .../myapp/m3u8downloader/utils/M3U8Log.java   |  28 +
+ .../myapp/m3u8downloader/utils/MD5Utils.java  |  30 ++
+ .../myapp/m3u8downloader/utils/MUtils.java    | 164 ++++++
+ .../myapp/m3u8downloader/utils/SPHelper.java  | 105 ++++
+ .../layout/player_layout_center_window.xml    |   6 +
+ .../player_layout_standard_controller.xml     |  39 ++
+ .../res/layout/player_layout_status_view.xml  |   7 +
+ android/build.gradle                          |   6 +
+ android/settings.gradle                       |   2 +
+ package-lock.json                             |  93 +---
+ package.json                                  |   3 +-
+ src/video/VideoInfoPage.tsx                   | 111 ++++
+ src/video/index.d.ts                          |   2 +
+ 34 files changed, 2884 insertions(+), 90 deletions(-)
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/BaseListener.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/DownloadQueue.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/M3U8DownloadTask.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/M3U8Downloader.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/M3U8DownloaderConfig.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/M3U8EncryptHelper.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/M3U8InfoManger.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/OnDeleteTaskListener.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/OnM3U8DownloadListener.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/OnM3U8InfoListener.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/OnTaskDownloadListener.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/WeakHandler.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8Task.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8TaskState.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8Ts.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/server/EncryptM3U8Server.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/server/M3U8HttpServer.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/utils/AES128Utils.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/utils/M3U8Log.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/utils/MD5Utils.java
+ create mode 100644 android/app/src/main/java/com/myapp/m3u8downloader/utils/MUtils.java
+ create mode 100755 android/app/src/main/java/com/myapp/m3u8downloader/utils/SPHelper.java
+ create mode 100644 android/app/src/main/res/layout/player_layout_center_window.xml
+ create mode 100644 android/app/src/main/res/layout/player_layout_standard_controller.xml
+ create mode 100644 android/app/src/main/res/layout/player_layout_status_view.xml
+ create mode 100644 src/video/VideoInfoPage.tsx
+ create mode 100644 src/video/index.d.ts
+
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index e278a51..607d93a 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -1,5 +1,6 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-  package="com.myapp">
++    xmlns:tools="http://schemas.android.com/tools"
++    package="com.myapp">
+ 
+     <uses-permission android:name="android.permission.INTERNET" />
+ 
+@@ -9,7 +10,8 @@
+       android:icon="@mipmap/ic_launcher"
+       android:roundIcon="@mipmap/ic_launcher_round"
+       android:allowBackup="false"
+-      android:theme="@style/AppTheme">
++      android:theme="@style/AppTheme"
++      tools:replace="android:allowBackup">
+       <activity
+         android:name=".MainActivity"
+         android:label="@string/app_name"
+diff --git a/android/app/src/main/java/com/myapp/MainApplication.java b/android/app/src/main/java/com/myapp/MainApplication.java
+index bf98bda..d5fe2dc 100644
+--- a/android/app/src/main/java/com/myapp/MainApplication.java
++++ b/android/app/src/main/java/com/myapp/MainApplication.java
+@@ -4,6 +4,7 @@ import android.app.Application;
+ import android.content.Context;
+ import com.facebook.react.PackageList;
+ import com.facebook.react.ReactApplication;
++import me.yiii.RCTIJKPlayer.RCTIJKPlayerPackage;
+ import com.iwhalecloud.ijkplayer.RCTIJKPlayerPackage;
+ import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
+ import org.devio.rn.splashscreen.SplashScreenReactPackage;
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/BaseListener.java b/android/app/src/main/java/com/myapp/m3u8downloader/BaseListener.java
+new file mode 100644
+index 0000000..692a88e
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/BaseListener.java
+@@ -0,0 +1,15 @@
++package com.myapp.m3u8downloader;
++
++public interface BaseListener {
++    /**
++     * 开始的时候回调
++     */
++    void onStart();
++
++    /**
++     * 错误的时候回调
++     *
++     * @param errorMsg
++     */
++    void onError(Throwable errorMsg);
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/DownloadQueue.java b/android/app/src/main/java/com/myapp/m3u8downloader/DownloadQueue.java
+new file mode 100644
+index 0000000..c913611
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/DownloadQueue.java
+@@ -0,0 +1,117 @@
++package com.myapp.m3u8downloader;
++
++import java.util.ArrayList;
++import java.util.List;
++
++import com.myapp.m3u8downloader.bean.M3U8Task;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/12/14
++ * 描    述: 自定义下载队列，采用ArrayList，扩展一些操作，非线程安全
++ * ================================================
++ */
++class DownloadQueue {
++
++    private List<M3U8Task> queue;
++
++    public DownloadQueue(){
++        queue = new ArrayList<>();
++    }
++
++    /**
++     * 入队
++     * @param task
++     */
++    public void offer(M3U8Task task){
++        queue.add(task);
++    }
++
++    /**
++     * 队头元素出队，并返回队头元素
++     * @return
++     */
++    public M3U8Task poll(){
++        try {
++            if (queue.size() >= 2){
++                queue.remove(0);
++                return queue.get(0);
++            }else if (queue.size() == 1){
++                queue.remove(0);
++            }
++        }catch (Exception e){
++        }
++        return null;
++    }
++
++    /**
++     * 返回队头元素
++     * @return
++     */
++    public M3U8Task peek(){
++        try {
++            if (queue.size() >= 1){
++                return queue.get(0);
++            }
++        }catch (Exception e){
++        }
++        return null;
++    }
++
++    /**
++     * 移除元素
++     * @param task
++     * @return 是否成功移除
++     */
++    public boolean remove(M3U8Task task){
++        if (contains(task)){
++            return queue.remove(task);
++        }
++        return false;
++    }
++
++    /**
++     * 判断队列中是否含有此元素
++     * @param task
++     * @return
++     */
++    public boolean contains(M3U8Task task){
++        return queue.contains(task);
++    }
++
++    /**
++     * 通过url 返回队列中任务元素
++     * @param url
++     * @return
++     */
++    public M3U8Task getTask(String url){
++        try {
++            for (int i = 0; i < queue.size(); i++){
++                if (queue.get(i).getUrl().equals(url)){
++                    return queue.get(i);
++                }
++            }
++        }catch (Exception e){
++        }
++
++        return null;
++    }
++
++    public boolean isEmpty(){
++        return size() == 0;
++    }
++
++    public int size(){
++        return queue.size();
++    }
++
++    public boolean isHead(String url){
++        return isHead(new M3U8Task(url));
++    }
++
++    public boolean isHead(M3U8Task task){
++        return task.equals(peek());
++    }
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/M3U8DownloadTask.java b/android/app/src/main/java/com/myapp/m3u8downloader/M3U8DownloadTask.java
+new file mode 100644
+index 0000000..3b49074
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/M3U8DownloadTask.java
+@@ -0,0 +1,367 @@
++package com.myapp.m3u8downloader;
++
++import android.os.Handler;
++import android.os.Message;
++
++import java.io.File;
++import java.io.FileOutputStream;
++import java.io.IOException;
++import java.io.InputStream;
++import java.io.InterruptedIOException;
++import java.net.HttpURLConnection;
++import java.net.MalformedURLException;
++import java.net.URL;
++import java.util.Timer;
++import java.util.TimerTask;
++import java.util.concurrent.ExecutorService;
++import java.util.concurrent.Executors;
++
++import com.myapp.m3u8downloader.bean.M3U8;
++import com.myapp.m3u8downloader.bean.M3U8Ts;
++import com.myapp.m3u8downloader.utils.M3U8Log;
++import com.myapp.m3u8downloader.utils.MUtils;
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/17
++ * 描    述: 单独M3U8下载任务
++ * ================================================
++ */
++class M3U8DownloadTask {
++    private static final int WHAT_ON_ERROR = 1001;
++    private static final int WHAT_ON_PROGRESS = 1002;
++    private static final int WHAT_ON_SUCCESS = 1003;
++    private static final int WHAT_ON_START_DOWNLOAD = 1004;
++    private OnTaskDownloadListener onTaskDownloadListener;
++    //加密Key，默认为空，不加密
++    private String encryptKey = null;
++    private String m3u8FileName = "local.m3u8";
++    //文件保存的路径
++    private String saveDir;
++    //当前下载完成的文件个数
++    private volatile int curTs = 0;
++    //总文件的个数
++    private volatile int totalTs = 0;
++    //单个文件的大小
++    private volatile long itemFileSize = 0;
++    //所有文件的大小
++    private volatile long totalFileSize = 0;
++    private volatile boolean isStartDownload = true;
++    /**
++     * 当前已经在下完成的大小
++     */
++    private long curLength = 0;
++    /**
++     * 任务是否正在运行中
++     */
++    private boolean isRunning = false;
++    /**
++     * 线程池最大线程数，默认为3
++     */
++    private int threadCount = 3;
++    /**
++     * 读取超时时间
++     */
++    private int readTimeout = 30 * 60 * 1000;
++    /**
++     * 链接超时时间
++     */
++    private int connTimeout = 10 * 1000;
++    /**
++     * 定时任务
++     */
++    private Timer netSpeedTimer;
++    private ExecutorService executor;//线程池
++    private M3U8 currentM3U8;
++
++    private WeakHandler mHandler = new WeakHandler(new Handler.Callback() {
++        @Override
++        public boolean handleMessage(Message msg) {
++            switch (msg.what) {
++                case WHAT_ON_ERROR:
++                    onTaskDownloadListener.onError((Throwable) msg.obj);
++                    break;
++
++                case WHAT_ON_START_DOWNLOAD:
++                    onTaskDownloadListener.onStartDownload(totalTs, curTs);
++                    break;
++
++                case WHAT_ON_PROGRESS:
++                    onTaskDownloadListener.onDownloading(totalFileSize, itemFileSize, totalTs, curTs);
++                    break;
++
++                case WHAT_ON_SUCCESS:
++                    if (netSpeedTimer != null) {
++                        netSpeedTimer.cancel();
++                    }
++                    onTaskDownloadListener.onSuccess(currentM3U8);
++                    break;
++            }
++            return true;
++        }
++    });
++
++    public M3U8DownloadTask(){
++        connTimeout = M3U8DownloaderConfig.getConnTimeout();
++        readTimeout = M3U8DownloaderConfig.getReadTimeout();
++        threadCount = M3U8DownloaderConfig.getThreadCount();
++    }
++
++    /**
++     * 开始下载
++     *
++     * @param url
++     * @param onTaskDownloadListener
++     */
++    public void download(final String url, OnTaskDownloadListener onTaskDownloadListener) {
++        saveDir = MUtils.getSaveFileDir(url);
++        M3U8Log.d("start download ,SaveDir: "+ saveDir);
++        this.onTaskDownloadListener = onTaskDownloadListener;
++        if (!isRunning()) {
++            getM3U8Info(url);
++        } else {
++            handlerError(new Throwable("Task running"));
++        }
++    }
++
++
++    public void setEncryptKey(String encryptKey){
++        this.encryptKey = encryptKey;
++    }
++
++    public String getEncryptKey(){
++        return encryptKey;
++    }
++
++
++    /**
++     * 获取任务是否正在执行
++     *
++     * @return
++     */
++    public boolean isRunning() {
++        return isRunning;
++    }
++
++    /**
++     * 先获取m3u8信息
++     *
++     * @param url
++     */
++    private void getM3U8Info(String url) {
++
++        M3U8InfoManger.getInstance().getM3U8Info(url, new OnM3U8InfoListener() {
++            @Override
++            public void onSuccess(final M3U8 m3U8) {
++                currentM3U8 = m3U8;
++                new Thread() {
++                    @Override
++                    public void run() {
++                        try {
++                            startDownload(m3U8);
++                            if (executor != null) {
++                                executor.shutdown();//下载完成之后要关闭线程池
++                            }
++                            while (executor != null && !executor.isTerminated()) {
++                                //等待中
++                                Thread.sleep(100);
++                            }
++                            if (isRunning) {
++                                File m3u8File = MUtils.createLocalM3U8(new File(saveDir), m3u8FileName, currentM3U8);
++                                currentM3U8.setM3u8FilePath(m3u8File.getPath());
++                                currentM3U8.setDirFilePath(saveDir);
++                                currentM3U8.getFileSize();
++                                mHandler.sendEmptyMessage(WHAT_ON_SUCCESS);
++                                isRunning = false;
++                            }
++                        } catch (InterruptedIOException e) {
++                            //被中断了，使用stop时会抛出这个，不需要处理
++                            return;
++                        } catch (IOException e) {
++                            handlerError(e);
++                            return;
++                        } catch (InterruptedException e) {
++                            handlerError(e);
++                            return;
++                        } catch (Exception e) {
++                            handlerError(e);
++                        }
++                    }
++                }.start();
++            }
++
++            @Override
++            public void onStart() {
++                onTaskDownloadListener.onStart();
++            }
++
++            @Override
++            public void onError(Throwable errorMsg) {
++                handlerError(errorMsg);
++            }
++        });
++    }
++
++    /**
++     * 开始下载
++     * 关于断点续传，每个任务会根据url进行生成相应Base64目录
++     * 如果任务已经停止、开始下载之前，下一次会判断相关任务目录中已经下载完成的ts文件是否已经下载过了，下载了就不再下载
++     * @param m3U8
++     */
++    private void startDownload(final M3U8 m3U8) {
++        final File dir = new File(saveDir);
++        //没有就创建
++        if (!dir.exists()) {
++            dir.mkdirs();
++        }
++        totalTs = m3U8.getTsList().size();
++        if (executor != null) {
++            executor.shutdownNow();
++        }
++//        //等待线程池完全关闭
++//        while (executor != null && !executor.isTerminated()) {
++//            //等待中
++//            try {
++//                M3U8Log.d("startDownload wait executor shutDown!");
++//                Thread.sleep(100);
++//            } catch (InterruptedException e) {
++//                M3U8Log.e(e.getMessage());
++//            }
++//        }
++        M3U8Log.d("executor is shutDown ! Downloading !");
++        //初始化值
++        curTs = 1;
++        isRunning = true;
++        isStartDownload = true;
++        executor = null;
++
++        executor = Executors.newFixedThreadPool(threadCount);
++        final String basePath = m3U8.getBasePath();
++        netSpeedTimer = new Timer();
++        netSpeedTimer.schedule(new TimerTask() {
++            @Override
++            public void run() {
++                onTaskDownloadListener.onProgress(curLength);
++            }
++        }, 0, 1500);
++
++        for (final M3U8Ts m3U8Ts : m3U8.getTsList()) {//循环下载
++            executor.execute(new Runnable() {
++                @Override
++                public void run() {
++
++                    File file;
++                    try {
++                        String fileName = M3U8EncryptHelper.encryptFileName(encryptKey, m3U8Ts.obtainEncodeTsFileName());
++                        file = new File(dir + File.separator + fileName);
++                    } catch (Exception e) {
++                        file = new File(dir + File.separator + m3U8Ts.getUrl());
++                    }
++
++                    if (!file.exists()) {//下载过的就不管了
++
++                        FileOutputStream fos = null;
++                        InputStream inputStream = null;
++                        try {
++                            URL url = new URL(m3U8Ts.obtainFullUrl(basePath));
++                            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
++                            conn.setConnectTimeout(connTimeout);
++                            conn.setReadTimeout(readTimeout);
++                            if (conn.getResponseCode() == 200) {
++                                if (isStartDownload){
++                                    isStartDownload = false;
++                                    mHandler.sendEmptyMessage(WHAT_ON_START_DOWNLOAD);
++                                }
++                                inputStream = conn.getInputStream();
++                                fos = new FileOutputStream(file);//会自动创建文件
++                                int len = 0;
++                                byte[] buf = new byte[8 * 1024 * 1024];
++                                while ((len = inputStream.read(buf)) != -1) {
++                                    curLength += len;
++                                    fos.write(buf, 0, len);//写入流中
++                                }
++                            } else {
++                                handlerError(new Throwable(String.valueOf(conn.getResponseCode())));
++                            }
++                        } catch (MalformedURLException e) {
++                            handlerError(e);
++                        } catch (IOException e) {
++                            handlerError(e);
++                        } catch (Exception e) {
++                            handlerError(e);
++                        }
++                        finally
++                        {//关流
++                            if (inputStream != null) {
++                                try {
++                                    inputStream.close();
++                                } catch (IOException e) {
++                                }
++                            }
++                            if (fos != null) {
++                                try {
++                                    fos.close();
++                                } catch (IOException e) {
++                                }
++                            }
++                        }
++
++                        itemFileSize = file.length();
++                        m3U8Ts.setFileSize(itemFileSize);
++                        mHandler.sendEmptyMessage(WHAT_ON_PROGRESS);
++                        curTs++;
++                    }else {
++                        curTs ++;
++                        itemFileSize = file.length();
++                        m3U8Ts.setFileSize(itemFileSize);
++                    }
++                }
++            });
++        }
++    }
++
++
++    /**
++     * 通知异常
++     *
++     * @param e
++     */
++    private void handlerError(Throwable e) {
++        if (!"Task running".equals(e.getMessage())) {
++            stop();
++        }
++        //不提示被中断的情况
++        if ("thread interrupted".equals(e.getMessage())) {
++            return;
++        }
++        Message msg = Message.obtain();
++        msg.obj = e;
++        msg.what = WHAT_ON_ERROR;
++        mHandler.sendMessage(msg);
++    }
++
++    /**
++     * 停止任务
++     */
++    public void stop() {
++        if (netSpeedTimer != null) {
++            netSpeedTimer.cancel();
++            netSpeedTimer = null;
++        }
++        isRunning = false;
++        if (executor != null) {
++            executor.shutdownNow();
++        }
++    }
++
++    public File getM3u8File(String url){
++        try {
++            return new File(MUtils.getSaveFileDir(url), m3u8FileName);
++        }catch (Exception e){
++            M3U8Log.e(e.getMessage());
++        }
++        return null;
++    }
++
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/M3U8Downloader.java b/android/app/src/main/java/com/myapp/m3u8downloader/M3U8Downloader.java
+new file mode 100644
+index 0000000..e339a80
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/M3U8Downloader.java
+@@ -0,0 +1,374 @@
++package com.myapp.m3u8downloader;
++
++import android.text.TextUtils;
++
++import androidx.annotation.Nullable;
++
++import java.io.File;
++import java.util.List;
++
++import com.myapp.m3u8downloader.bean.M3U8;
++import com.myapp.m3u8downloader.bean.M3U8Task;
++import com.myapp.m3u8downloader.bean.M3U8TaskState;
++import com.myapp.m3u8downloader.utils.M3U8Log;
++import com.myapp.m3u8downloader.utils.MUtils;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/17
++ * 描    述: M3U8下载器
++ * ================================================
++ */
++public class M3U8Downloader {
++
++    private long currentTime;
++    private M3U8Task currentM3U8Task;
++    private DownloadQueue downLoadQueue;
++    private M3U8DownloadTask m3U8DownLoadTask;
++    private OnM3U8DownloadListener onM3U8DownloadListener;
++
++    private M3U8Downloader() {
++        downLoadQueue = new DownloadQueue();
++        m3U8DownLoadTask = new M3U8DownloadTask();
++    }
++
++    private static class SingletonHolder {
++        static M3U8Downloader instance = new M3U8Downloader();
++    }
++
++    public static M3U8Downloader getInstance() {
++        return SingletonHolder.instance;
++    }
++
++
++    /**
++     * 防止快速点击引起ThreadPoolExecutor频繁创建销毁引起crash
++     *
++     * @return
++     */
++    private boolean isQuicklyClick() {
++        boolean result = false;
++        if (System.currentTimeMillis() - currentTime <= 100) {
++            result = true;
++            M3U8Log.d("is too quickly click!");
++        }
++        currentTime = System.currentTimeMillis();
++        return result;
++    }
++
++
++    /**
++     * 下载下一个任务，直到任务全部完成
++     */
++    private void downloadNextTask() {
++        startDownloadTask(downLoadQueue.poll());
++    }
++
++    private void pendingTask(M3U8Task task) {
++        task.setState(M3U8TaskState.PENDING);
++        if (onM3U8DownloadListener != null) {
++            onM3U8DownloadListener.onDownloadPending(task);
++        }
++    }
++
++
++    /**
++     * 下载任务
++     * 如果当前任务在下载列表中则认为是暂停
++     * 否则入队等候下载
++     *
++     * @param url
++     */
++    public void download(String url) {
++        if (TextUtils.isEmpty(url) || isQuicklyClick()) return;
++        M3U8Task task = new M3U8Task(url);
++        if (downLoadQueue.contains(task)) {
++            task = downLoadQueue.getTask(url);
++            if (task.getState() == M3U8TaskState.PAUSE || task.getState() == M3U8TaskState.ERROR) {
++                startDownloadTask(task);
++            } else {
++                pause(url);
++            }
++        } else {
++            downLoadQueue.offer(task);
++            startDownloadTask(task);
++        }
++    }
++
++    /**
++     * 暂停，如果此任务正在下载则暂停，否则无反应
++     * 只支持单一任务暂停，多任务暂停请使用{@link #pause(List)}
++     *
++     * @param url
++     */
++    public void pause(String url) {
++        if (TextUtils.isEmpty(url)) return;
++        M3U8Task task = downLoadQueue.getTask(url);
++        if (task != null) {
++            task.setState(M3U8TaskState.PAUSE);
++
++            if (onM3U8DownloadListener != null) {
++                onM3U8DownloadListener.onDownloadPause(task);
++            }
++
++            if (url.equals(currentM3U8Task.getUrl())) {
++                m3U8DownLoadTask.stop();
++                downloadNextTask();
++            } else {
++                downLoadQueue.remove(task);
++            }
++        }
++    }
++
++    /**
++     * 批量暂停
++     *
++     * @param urls
++     */
++    public void pause(List<String> urls) {
++        if (urls == null || urls.size() == 0) return;
++        boolean isCurrentTaskPause = false;
++        for (String url : urls) {
++            if (downLoadQueue.contains(new M3U8Task(url))) {
++                M3U8Task task = downLoadQueue.getTask(url);
++                if (task != null) {
++                    task.setState(M3U8TaskState.PAUSE);
++                    if (onM3U8DownloadListener != null) {
++                        onM3U8DownloadListener.onDownloadPause(task);
++                    }
++                    if (task.equals(currentM3U8Task)) {
++                        m3U8DownLoadTask.stop();
++                        isCurrentTaskPause = true;
++                    }
++                    downLoadQueue.remove(task);
++                }
++            }
++        }
++        if (isCurrentTaskPause) startDownloadTask(downLoadQueue.peek());
++    }
++
++    /**
++     * 检查m3u8文件是否存在
++     *
++     * @param url
++     * @return
++     */
++    public boolean checkM3U8IsExist(String url) {
++        try {
++            return m3U8DownLoadTask.getM3u8File(url).exists();
++        } catch (Exception e) {
++            M3U8Log.e(e.getMessage());
++        }
++        return false;
++    }
++
++    /**
++     * 得到m3u8文件路径
++     *
++     * @param url
++     * @return
++     */
++    public String getM3U8Path(String url) {
++        return m3U8DownLoadTask.getM3u8File(url).getPath();
++    }
++
++    public boolean isRunning() {
++        return m3U8DownLoadTask.isRunning();
++    }
++
++
++    /**
++     * if task is the current task , it will return true
++     *
++     * @param url
++     * @return
++     */
++    public boolean isCurrentTask(String url) {
++        return !TextUtils.isEmpty(url)
++                && downLoadQueue.peek() != null
++                && downLoadQueue.peek().getUrl().equals(url);
++    }
++
++
++    public void setOnM3U8DownloadListener(OnM3U8DownloadListener onM3U8DownloadListener) {
++        this.onM3U8DownloadListener = onM3U8DownloadListener;
++    }
++
++    public void setEncryptKey(String encryptKey) {
++        m3U8DownLoadTask.setEncryptKey(encryptKey);
++    }
++
++    public String getEncryptKey() {
++        return m3U8DownLoadTask.getEncryptKey();
++    }
++
++    private void startDownloadTask(M3U8Task task) {
++        if (task == null) return;
++        pendingTask(task);
++        if (!downLoadQueue.isHead(task)) {
++            M3U8Log.d("start download task, but task is running: " + task.getUrl());
++            return;
++        }
++
++        if (task.getState() == M3U8TaskState.PAUSE) {
++            M3U8Log.d("start download task, but task has pause: " + task.getUrl());
++            return;
++        }
++        try {
++            currentM3U8Task = task;
++            M3U8Log.d("====== start downloading ===== " + task.getUrl());
++            m3U8DownLoadTask.download(task.getUrl(), onTaskDownloadListener);
++        } catch (Exception e) {
++            M3U8Log.e("startDownloadTask Error:" + e.getMessage());
++        }
++    }
++
++    /**
++     * 取消任务
++     *
++     * @param url
++     */
++    public void cancel(String url) {
++        pause(url);
++    }
++
++    /**
++     * 批量取消任务
++     *
++     * @param urls
++     */
++    public void cancel(List<String> urls) {
++        pause(urls);
++    }
++
++    /**
++     * 取消任务,删除缓存
++     *
++     * @param url
++     */
++    public void cancelAndDelete(final String url, @Nullable final OnDeleteTaskListener listener) {
++        pause(url);
++        if (listener != null) {
++            listener.onStart();
++        }
++        new Thread(new Runnable() {
++            @Override
++            public void run() {
++                boolean isDelete = MUtils.clearDir(new File(MUtils.getSaveFileDir(url)));
++                if (listener != null) {
++                    if (isDelete) {
++                        listener.onSuccess();
++                    } else {
++                        listener.onFail();
++                    }
++                }
++            }
++        }).start();
++    }
++
++    /**
++     * 批量取消任务,删除缓存
++     *
++     * @param urls
++     * @param listener
++     */
++    public void cancelAndDelete(final List<String> urls, @Nullable final OnDeleteTaskListener listener) {
++        pause(urls);
++        if (listener != null) {
++            listener.onStart();
++        }
++        new Thread(new Runnable() {
++            @Override
++            public void run() {
++                boolean isDelete = true;
++                for (String url : urls) {
++                    isDelete = isDelete && MUtils.clearDir(new File(MUtils.getSaveFileDir(url)));
++                }
++                if (listener != null) {
++                    if (isDelete) {
++                        listener.onSuccess();
++                    } else {
++                        listener.onFail();
++                    }
++                }
++            }
++        }).start();
++    }
++
++    private OnTaskDownloadListener onTaskDownloadListener = new OnTaskDownloadListener() {
++        private long lastLength;
++        private float downloadProgress;
++
++        @Override
++        public void onStartDownload(int totalTs, int curTs) {
++            M3U8Log.d("onStartDownload: " + totalTs + "|" + curTs);
++
++            currentM3U8Task.setState(M3U8TaskState.DOWNLOADING);
++            downloadProgress = 1.0f * curTs / totalTs;
++        }
++
++        @Override
++        public void onDownloading(long totalFileSize, long itemFileSize, int totalTs, int curTs) {
++            if (!m3U8DownLoadTask.isRunning()) return;
++            M3U8Log.d("onDownloading: " + totalFileSize + "|" + itemFileSize + "|" + totalTs + "|" + curTs);
++
++            downloadProgress = 1.0f * curTs / totalTs;
++
++            if (onM3U8DownloadListener != null) {
++                onM3U8DownloadListener.onDownloadItem(currentM3U8Task, itemFileSize, totalTs, curTs);
++            }
++        }
++
++        @Override
++        public void onSuccess(M3U8 m3U8) {
++            m3U8DownLoadTask.stop();
++            currentM3U8Task.setM3U8(m3U8);
++            currentM3U8Task.setState(M3U8TaskState.SUCCESS);
++            if (onM3U8DownloadListener != null) {
++                onM3U8DownloadListener.onDownloadSuccess(currentM3U8Task);
++            }
++            M3U8Log.d("m3u8 Downloader onSuccess: " + m3U8);
++            downloadNextTask();
++
++        }
++
++        @Override
++        public void onProgress(long curLength) {
++            if (curLength - lastLength > 0) {
++                currentM3U8Task.setProgress(downloadProgress);
++                currentM3U8Task.setSpeed(curLength - lastLength);
++                if (onM3U8DownloadListener != null) {
++                    onM3U8DownloadListener.onDownloadProgress(currentM3U8Task);
++                }
++                lastLength = curLength;
++            }
++        }
++
++        @Override
++        public void onStart() {
++            currentM3U8Task.setState(M3U8TaskState.PREPARE);
++            if (onM3U8DownloadListener != null) {
++                onM3U8DownloadListener.onDownloadPrepare(currentM3U8Task);
++            }
++            M3U8Log.d("onDownloadPrepare: " + currentM3U8Task.getUrl());
++        }
++
++        @Override
++        public void onError(Throwable errorMsg) {
++            if (errorMsg.getMessage() != null && errorMsg.getMessage().contains("ENOSPC")) {
++                currentM3U8Task.setState(M3U8TaskState.ENOSPC);
++            } else {
++                currentM3U8Task.setState(M3U8TaskState.ERROR);
++            }
++            if (onM3U8DownloadListener != null) {
++                onM3U8DownloadListener.onDownloadError(currentM3U8Task, errorMsg);
++            }
++            M3U8Log.e("onError: " + errorMsg.getMessage());
++            downloadNextTask();
++        }
++
++    };
++
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/M3U8DownloaderConfig.java b/android/app/src/main/java/com/myapp/m3u8downloader/M3U8DownloaderConfig.java
+new file mode 100644
+index 0000000..41461c1
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/M3U8DownloaderConfig.java
+@@ -0,0 +1,78 @@
++package com.myapp.m3u8downloader;
++
++import android.content.Context;
++import android.os.Environment;
++
++import java.io.File;
++
++import com.myapp.m3u8downloader.utils.SPHelper;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/24
++ * 描    述: M3U8Downloader 配置类
++ * ================================================
++ */
++public class M3U8DownloaderConfig {
++
++    private static final String TAG_SAVE_DIR = "TAG_SAVE_DIR_M3U8";
++    private static final String TAG_THREAD_COUNT = "TAG_THREAD_COUNT_M3U8";
++    private static final String TAG_CONN_TIMEOUT = "TAG_CONN_TIMEOUT_M3U8";
++    private static final String TAG_READ_TIMEOUT = "TAG_READ_TIMEOUT_M3U8";
++    private static final String TAG_DEBUG = "TAG_DEBUG_M3U8";
++
++    public static M3U8DownloaderConfig build(Context context){
++        SPHelper.init(context);
++        return new M3U8DownloaderConfig();
++    }
++
++    public M3U8DownloaderConfig setSaveDir(String saveDir){
++        SPHelper.putString(TAG_SAVE_DIR, saveDir);
++        return this;
++    }
++
++    public static String getSaveDir(){
++        return SPHelper.getString(TAG_SAVE_DIR, Environment.getExternalStorageDirectory().getPath() + File.separator + "M3u8Downloader");
++    }
++
++    public M3U8DownloaderConfig setThreadCount(int threadCount){
++        if (threadCount > 5) threadCount = 5;
++        if (threadCount <= 0) threadCount = 1;
++        SPHelper.putInt(TAG_THREAD_COUNT, threadCount);
++        return this;
++    }
++
++    public static int getThreadCount(){
++       return SPHelper.getInt(TAG_THREAD_COUNT, 3);
++    }
++
++    public M3U8DownloaderConfig setConnTimeout(int connTimeout){
++        SPHelper.putInt(TAG_CONN_TIMEOUT, connTimeout);
++        return this;
++    }
++
++    public static int getConnTimeout(){
++        return SPHelper.getInt(TAG_CONN_TIMEOUT, 10 * 1000);
++    }
++
++    public M3U8DownloaderConfig setReadTimeout(int readTimeout){
++        SPHelper.putInt(TAG_READ_TIMEOUT, readTimeout);
++        return this;
++    }
++
++    public static int getReadTimeout(){
++        return SPHelper.getInt(TAG_READ_TIMEOUT, 30 * 60 * 1000);
++    }
++
++
++    public M3U8DownloaderConfig setDebugMode(boolean debug){
++        SPHelper.putBoolean(TAG_DEBUG, debug);
++        return this;
++    }
++
++    public static boolean isDebugMode(){
++        return SPHelper.getBoolean(TAG_DEBUG, false);
++    }
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/M3U8EncryptHelper.java b/android/app/src/main/java/com/myapp/m3u8downloader/M3U8EncryptHelper.java
+new file mode 100644
+index 0000000..af0c5b6
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/M3U8EncryptHelper.java
+@@ -0,0 +1,75 @@
++package com.myapp.m3u8downloader;
++
++import android.text.TextUtils;
++
++import java.io.File;
++
++import com.myapp.m3u8downloader.utils.AES128Utils;
++
++import static com.myapp.m3u8downloader.utils.AES128Utils.parseByte2HexStr;
++import static com.myapp.m3u8downloader.utils.AES128Utils.parseHexStr2Byte;
++import static com.myapp.m3u8downloader.utils.MUtils.readFile;
++import static com.myapp.m3u8downloader.utils.MUtils.saveFile;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/27
++ * 描    述: M3U8加密助手类
++ * ================================================
++ */
++public class M3U8EncryptHelper {
++
++    public static void encryptFile(String key, String fileName) throws Exception{
++        if (TextUtils.isEmpty(key)) return;
++        byte[] bytes = AES128Utils.getAESEncode(key,readFile(fileName));
++        saveFile(bytes, fileName);
++    }
++
++    public static void decryptFile(String key, String fileName) throws Exception{
++        if (TextUtils.isEmpty(key)) return;
++        byte[] bytes = AES128Utils.getAESDecode(key,readFile(fileName));
++        saveFile(bytes, fileName);
++    }
++
++
++    public static String encryptFileName(String key, String str) throws Exception{
++        if (TextUtils.isEmpty(key)) return str;
++        str = parseByte2HexStr(AES128Utils.getAESEncode(key,str));
++        return str;
++    }
++
++    public static String decryptFileName(String key, String str) throws Exception{
++        if (TextUtils.isEmpty(key)) return str;
++        str = new String(AES128Utils.getAESDecode(key,parseHexStr2Byte(str)));
++        return str;
++    }
++
++    public static void encryptTsFilesName(String key, String dirPath) throws Exception{
++        if (TextUtils.isEmpty(key)) return;
++        File dirFile = new File(dirPath);
++        if (dirFile.exists() && dirFile.isDirectory()){
++            File[] files = dirFile.listFiles();
++            for (int i = 0; i < files.length; i++) {// 遍历目录下所有的文件
++                if (files[i].getName().contains("m3u8"))continue;
++                File renameFile = new File(dirPath, encryptFileName(key, files[i].getName()));
++                files[i].renameTo(renameFile);
++            }
++        }
++
++    }
++
++    public static void decryptTsFilesName(String key, String dirPath) throws Exception{
++        if (TextUtils.isEmpty(key)) return ;
++        File dirFile = new File(dirPath);
++        if (dirFile.exists() && dirFile.isDirectory()){
++            File[] files = dirFile.listFiles();
++            for (int i = 0; i < files.length; i++) {// 遍历目录下所有的文件
++                if (files[i].getName().contains("m3u8"))continue;
++                File renameFile = new File(dirPath,decryptFileName(key, files[i].getName()));
++                files[i].renameTo(renameFile);
++            }
++        }
++    }
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/M3U8InfoManger.java b/android/app/src/main/java/com/myapp/m3u8downloader/M3U8InfoManger.java
+new file mode 100644
+index 0000000..40150dd
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/M3U8InfoManger.java
+@@ -0,0 +1,73 @@
++package com.myapp.m3u8downloader;
++
++
++import java.io.IOException;
++
++import com.myapp.m3u8downloader.bean.M3U8;
++import com.myapp.m3u8downloader.utils.MUtils;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/15
++ * 描    述: 获取M3U8信息的管理器
++ * ================================================
++ */
++public class M3U8InfoManger {
++    private static M3U8InfoManger mM3U8InfoManger;
++    private OnM3U8InfoListener onM3U8InfoListener;
++
++    private M3U8InfoManger() {
++    }
++
++    public static M3U8InfoManger getInstance() {
++        synchronized (M3U8InfoManger.class) {
++            if (mM3U8InfoManger == null) {
++                mM3U8InfoManger = new M3U8InfoManger();
++            }
++        }
++        return mM3U8InfoManger;
++    }
++
++    /**
++     * 获取m3u8信息
++     *
++     * @param url
++     * @param onM3U8InfoListener
++     */
++    public synchronized void getM3U8Info(final String url, OnM3U8InfoListener onM3U8InfoListener) {
++        this.onM3U8InfoListener = onM3U8InfoListener;
++        onM3U8InfoListener.onStart();
++        new Thread() {
++            @Override
++            public void run() {
++                try {
++                    M3U8 m3u8 = MUtils.parseIndex(url);
++                    handlerSuccess(m3u8);
++                } catch (IOException e) {
++                    handlerError(e);
++                }
++            }
++        }.start();
++
++    }
++
++    /**
++     * 通知异常
++     *
++     * @param e
++     */
++    private void handlerError(Throwable e) {
++        onM3U8InfoListener.onError(e);
++    }
++
++    /**
++     * 通知成功
++     *
++     * @param m3u8
++     */
++    private void handlerSuccess(M3U8 m3u8) {
++        onM3U8InfoListener.onSuccess(m3u8);
++    }
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/OnDeleteTaskListener.java b/android/app/src/main/java/com/myapp/m3u8downloader/OnDeleteTaskListener.java
+new file mode 100644
+index 0000000..6b5bcf4
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/OnDeleteTaskListener.java
+@@ -0,0 +1,26 @@
++package com.myapp.m3u8downloader;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/12/14
++ * 描    述: 删除任务缓存监听器
++ * ================================================
++ */
++public interface OnDeleteTaskListener extends BaseListener {
++    /**
++     * 开始的时候回调
++     */
++    void onStart();
++
++    /**
++     * 非UI线程
++     */
++    void onSuccess();
++
++    /**
++     * 非UI线程
++     */
++    void onFail();
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/OnM3U8DownloadListener.java b/android/app/src/main/java/com/myapp/m3u8downloader/OnM3U8DownloadListener.java
+new file mode 100644
+index 0000000..b20c448
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/OnM3U8DownloadListener.java
+@@ -0,0 +1,53 @@
++package com.myapp.m3u8downloader;
++
++import com.myapp.m3u8downloader.bean.M3U8Task;
++
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/17
++ * 描    述: M3U8Downloader 监听器
++ * ================================================
++ */
++public abstract class OnM3U8DownloadListener {
++
++    //切片下载
++    public void onDownloadItem(M3U8Task task, long itemFileSize, int totalTs, int curTs) {
++
++    }
++
++    public void onDownloadSuccess(M3U8Task task) {
++
++    }
++
++    public void onDownloadPause(M3U8Task task) {
++
++    }
++
++    public void onDownloadPending(M3U8Task task) {
++
++    }
++
++    /**
++     * 异步回调，不可以直接在UI线程调用
++     * @param task
++     */
++    public void onDownloadProgress(M3U8Task task) {
++
++    }
++
++    public void onDownloadPrepare(M3U8Task task) {
++
++    }
++
++    /**
++     * 线程环境无法保证，不可以直接在UI线程调用
++     * @param task
++     */
++    public void onDownloadError(M3U8Task task, Throwable errorMsg) {
++
++    }
++
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/OnM3U8InfoListener.java b/android/app/src/main/java/com/myapp/m3u8downloader/OnM3U8InfoListener.java
+new file mode 100644
+index 0000000..6c919c0
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/OnM3U8InfoListener.java
+@@ -0,0 +1,36 @@
++package com.myapp.m3u8downloader;
++
++
++import com.myapp.m3u8downloader.bean.M3U8;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/17
++ * 描    述: 获取M3U8信息
++ * ================================================
++ */
++public interface OnM3U8InfoListener extends BaseListener{
++
++    /**
++     * 开始的时候回调
++     */
++    @Override
++    void onStart();
++
++    /**
++     * 获取成功的时候回调
++     * 异步回调，不可以直接在UI线程调用
++     */
++    void onSuccess(M3U8 m3U8);
++
++    /**
++     *
++     * 错误的时候回调
++     * 异步回调，不可以直接在UI线程调用
++     * @param errorMsg
++     */
++    @Override
++    void onError(Throwable errorMsg);
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/OnTaskDownloadListener.java b/android/app/src/main/java/com/myapp/m3u8downloader/OnTaskDownloadListener.java
+new file mode 100644
+index 0000000..24f5e08
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/OnTaskDownloadListener.java
+@@ -0,0 +1,58 @@
++package com.myapp.m3u8downloader;
++
++
++import com.myapp.m3u8downloader.bean.M3U8;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/17
++ * 描    述: 单独M3U8下载任务下载监听
++ * ================================================
++ */
++interface OnTaskDownloadListener extends BaseListener {
++
++    /**
++     *
++     * @param totalTs ts总数
++     * @param curTs 当前下载完成的ts个数
++     */
++    void onStartDownload(int totalTs, int curTs);
++
++    /**
++     * 下载m3u8文件.
++     * 注意：这个方法是异步的（子线程中执行），所以不能在此方法中回调，其他方法为主线程中回调
++     *
++     * @param totalFileSize
++     * @param itemFileSize 单个文件的大小
++     * @param totalTs      ts总数
++     * @param curTs        当前下载完成的ts个数
++     */
++    void onDownloading(long totalFileSize, long itemFileSize, int totalTs, int curTs);
++
++    /**
++     * 下载成功
++     */
++    void onSuccess(M3U8 m3U8);
++
++    /**
++     * 当前已经下载的文件大小
++     *
++     * @param curLength
++     */
++    void onProgress(long curLength);
++
++    /**
++     * 开始的时候回调
++     */
++    void onStart();
++
++
++    /**
++     * 错误的时候回调
++     * 线程环境无法保证，不可以直接在UI线程调用
++     * @param errorMsg
++     */
++    void onError(Throwable errorMsg);
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/WeakHandler.java b/android/app/src/main/java/com/myapp/m3u8downloader/WeakHandler.java
+new file mode 100644
+index 0000000..3d7b2ed
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/WeakHandler.java
+@@ -0,0 +1,491 @@
++package com.myapp.m3u8downloader;
++
++import android.os.Handler;
++import android.os.Looper;
++import android.os.Message;
++
++import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
++
++import java.lang.ref.WeakReference;
++import java.util.concurrent.locks.Lock;
++import java.util.concurrent.locks.ReentrantLock;
++
++/**
++ * Memory safer implementation of android.os.Handler
++ * <p/>
++ * Original implementation of Handlers always keeps hard reference to handler in queue of execution.
++ * If you create anonymous handler and post delayed message into it, it will keep all parent class
++ * for that time in memory even if it could be cleaned.
++ * <p/>
++ * This implementation is trickier, it will keep WeakReferences to runnables and messages,
++ * and GC could collect them once WeakHandler instance is not referenced any more
++ * <p/>
++ *
++ * @see Handler
++ *
++ * Created by Dmytro Voronkevych on 17/06/2014.
++ */
++@SuppressWarnings("unused")
++public class WeakHandler {
++    private final Handler.Callback mCallback; // hard reference to Callback. We need to keep callback in memory
++    private final ExecHandler mExec;
++    private Lock mLock = new ReentrantLock();
++    @SuppressWarnings("ConstantConditions")
++    final ChainedRef mRunnables = new ChainedRef(mLock, null);
++
++    /**
++     * Default constructor associates this handler with the {@link Looper} for the
++     * current thread.
++     *
++     * If this thread does not have a looper, this handler won't be able to receive messages
++     * so an exception is thrown.
++     */
++    public WeakHandler() {
++        mCallback = null;
++        mExec = new ExecHandler();
++    }
++
++    /**
++     * Constructor associates this handler with the {@link Looper} for the
++     * current thread and takes a callback interface in which you can handle
++     * messages.
++     *
++     * If this thread does not have a looper, this handler won't be able to receive messages
++     * so an exception is thrown.
++     *
++     * @param callback The callback interface in which to handle messages, or null.
++     */
++    public WeakHandler(@Nullable Handler.Callback callback) {
++        mCallback = callback; // Hard referencing body
++        mExec = new ExecHandler(new WeakReference<>(callback)); // Weak referencing inside ExecHandler
++    }
++
++    /**
++     * Use the provided {@link Looper} instead of the default one.
++     *
++     * @param looper The looper, must not be null.
++     */
++    public WeakHandler(@NonNull Looper looper) {
++        mCallback = null;
++        mExec = new ExecHandler(looper);
++    }
++
++    /**
++     * Use the provided {@link Looper} instead of the default one and take a callback
++     * interface in which to handle messages.
++     *
++     * @param looper The looper, must not be null.
++     * @param callback The callback interface in which to handle messages, or null.
++     */
++    public WeakHandler(@NonNull Looper looper, @NonNull Handler.Callback callback) {
++        mCallback = callback;
++        mExec = new ExecHandler(looper, new WeakReference<>(callback));
++    }
++
++    /**
++     * Causes the Runnable r to be added to the message queue.
++     * The runnable will be run on the thread to which this handler is
++     * attached.
++     *
++     * @param r The Runnable that will be executed.
++     *
++     * @return Returns true if the Runnable was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.
++     */
++    public final boolean post(@NonNull Runnable r) {
++        return mExec.post(wrapRunnable(r));
++    }
++
++    /**
++     * Causes the Runnable r to be added to the message queue, to be run
++     * at a specific time given by <var>uptimeMillis</var>.
++     * <b>The time-base is {@link android.os.SystemClock#uptimeMillis}.</b>
++     * The runnable will be run on the thread to which this handler is attached.
++     *
++     * @param r The Runnable that will be executed.
++     * @param uptimeMillis The absolute time at which the callback should run,
++     *         using the {@link android.os.SystemClock#uptimeMillis} time-base.
++     *
++     * @return Returns true if the Runnable was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.  Note that a
++     *         result of true does not mean the Runnable will be processed -- if
++     *         the looper is quit before the delivery time of the message
++     *         occurs then the message will be dropped.
++     */
++    public final boolean postAtTime(@NonNull Runnable r, long uptimeMillis) {
++        return mExec.postAtTime(wrapRunnable(r), uptimeMillis);
++    }
++
++    /**
++     * Causes the Runnable r to be added to the message queue, to be run
++     * at a specific time given by <var>uptimeMillis</var>.
++     * <b>The time-base is {@link android.os.SystemClock#uptimeMillis}.</b>
++     * The runnable will be run on the thread to which this handler is attached.
++     *
++     * @param r The Runnable that will be executed.
++     * @param uptimeMillis The absolute time at which the callback should run,
++     *         using the {@link android.os.SystemClock#uptimeMillis} time-base.
++     *
++     * @return Returns true if the Runnable was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.  Note that a
++     *         result of true does not mean the Runnable will be processed -- if
++     *         the looper is quit before the delivery time of the message
++     *         occurs then the message will be dropped.
++     *
++     * @see android.os.SystemClock#uptimeMillis
++     */
++    public final boolean postAtTime(Runnable r, Object token, long uptimeMillis) {
++        return mExec.postAtTime(wrapRunnable(r), token, uptimeMillis);
++    }
++
++    /**
++     * Causes the Runnable r to be added to the message queue, to be run
++     * after the specified amount of time elapses.
++     * The runnable will be run on the thread to which this handler
++     * is attached.
++     *
++     * @param r The Runnable that will be executed.
++     * @param delayMillis The delay (in milliseconds) until the Runnable
++     *        will be executed.
++     *
++     * @return Returns true if the Runnable was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.  Note that a
++     *         result of true does not mean the Runnable will be processed --
++     *         if the looper is quit before the delivery time of the message
++     *         occurs then the message will be dropped.
++     */
++    public final boolean postDelayed(Runnable r, long delayMillis) {
++        return mExec.postDelayed(wrapRunnable(r), delayMillis);
++    }
++
++    /**
++     * Posts a message to an object that implements Runnable.
++     * Causes the Runnable r to executed on the next iteration through the
++     * message queue. The runnable will be run on the thread to which this
++     * handler is attached.
++     * <b>This method is only for use in very special circumstances -- it
++     * can easily starve the message queue, cause ordering problems, or have
++     * other unexpected side-effects.</b>
++     *
++     * @param r The Runnable that will be executed.
++     *
++     * @return Returns true if the message was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.
++     */
++    public final boolean postAtFrontOfQueue(Runnable r) {
++        return mExec.postAtFrontOfQueue(wrapRunnable(r));
++    }
++
++    /**
++     * Remove any pending posts of Runnable r that are in the message queue.
++     */
++    public final void removeCallbacks(Runnable r) {
++        final WeakRunnable runnable = mRunnables.remove(r);
++        if (runnable != null) {
++            mExec.removeCallbacks(runnable);
++        }
++    }
++
++    /**
++     * Remove any pending posts of Runnable <var>r</var> with Object
++     * <var>token</var> that are in the message queue.  If <var>token</var> is null,
++     * all callbacks will be removed.
++     */
++    public final void removeCallbacks(Runnable r, Object token) {
++        final WeakRunnable runnable = mRunnables.remove(r);
++        if (runnable != null) {
++            mExec.removeCallbacks(runnable, token);
++        }
++    }
++
++    /**
++     * Pushes a message onto the end of the message queue after all pending messages
++     * before the current time. It will be received in callback,
++     * in the thread attached to this handler.
++     *
++     * @return Returns true if the message was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.
++     */
++    public final boolean sendMessage(Message msg) {
++        return mExec.sendMessage(msg);
++    }
++
++    /**
++     * Sends a Message containing only the what value.
++     *
++     * @return Returns true if the message was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.
++     */
++    public final boolean sendEmptyMessage(int what) {
++        return mExec.sendEmptyMessage(what);
++    }
++
++    /**
++     * Sends a Message containing only the what value, to be delivered
++     * after the specified amount of time elapses.
++     * @see #sendMessageDelayed(Message, long)
++     *
++     * @return Returns true if the message was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.
++     */
++    public final boolean sendEmptyMessageDelayed(int what, long delayMillis) {
++        return mExec.sendEmptyMessageDelayed(what, delayMillis);
++    }
++
++    /**
++     * Sends a Message containing only the what value, to be delivered
++     * at a specific time.
++     * @see #sendMessageAtTime(Message, long)
++     *
++     * @return Returns true if the message was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.
++     */
++    public final boolean sendEmptyMessageAtTime(int what, long uptimeMillis) {
++        return mExec.sendEmptyMessageAtTime(what, uptimeMillis);
++    }
++
++    /**
++     * Enqueue a message into the message queue after all pending messages
++     * before (current time + delayMillis). You will receive it in
++     * callback, in the thread attached to this handler.
++     *
++     * @return Returns true if the message was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.  Note that a
++     *         result of true does not mean the message will be processed -- if
++     *         the looper is quit before the delivery time of the message
++     *         occurs then the message will be dropped.
++     */
++    public final boolean sendMessageDelayed(Message msg, long delayMillis) {
++        return mExec.sendMessageDelayed(msg, delayMillis);
++    }
++
++    /**
++     * Enqueue a message into the message queue after all pending messages
++     * before the absolute time (in milliseconds) <var>uptimeMillis</var>.
++     * <b>The time-base is {@link android.os.SystemClock#uptimeMillis}.</b>
++     * You will receive it in callback, in the thread attached
++     * to this handler.
++     *
++     * @param uptimeMillis The absolute time at which the message should be
++     *         delivered, using the
++     *         {@link android.os.SystemClock#uptimeMillis} time-base.
++     *
++     * @return Returns true if the message was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.  Note that a
++     *         result of true does not mean the message will be processed -- if
++     *         the looper is quit before the delivery time of the message
++     *         occurs then the message will be dropped.
++     */
++    public boolean sendMessageAtTime(Message msg, long uptimeMillis) {
++        return mExec.sendMessageAtTime(msg, uptimeMillis);
++    }
++
++    /**
++     * Enqueue a message at the front of the message queue, to be processed on
++     * the next iteration of the message loop.  You will receive it in
++     * callback, in the thread attached to this handler.
++     * <b>This method is only for use in very special circumstances -- it
++     * can easily starve the message queue, cause ordering problems, or have
++     * other unexpected side-effects.</b>
++     *
++     * @return Returns true if the message was successfully placed in to the
++     *         message queue.  Returns false on failure, usually because the
++     *         looper processing the message queue is exiting.
++     */
++    public final boolean sendMessageAtFrontOfQueue(Message msg) {
++        return mExec.sendMessageAtFrontOfQueue(msg);
++    }
++
++    /**
++     * Remove any pending posts of messages with code 'what' that are in the
++     * message queue.
++     */
++    public final void removeMessages(int what) {
++        mExec.removeMessages(what);
++    }
++
++    /**
++     * Remove any pending posts of messages with code 'what' and whose obj is
++     * 'object' that are in the message queue.  If <var>object</var> is null,
++     * all messages will be removed.
++     */
++    public final void removeMessages(int what, Object object) {
++        mExec.removeMessages(what, object);
++    }
++
++    /**
++     * Remove any pending posts of callbacks and sent messages whose
++     * <var>obj</var> is <var>token</var>.  If <var>token</var> is null,
++     * all callbacks and messages will be removed.
++     */
++    public final void removeCallbacksAndMessages(Object token) {
++        mExec.removeCallbacksAndMessages(token);
++    }
++
++    /**
++     * Check if there are any pending posts of messages with code 'what' in
++     * the message queue.
++     */
++    public final boolean hasMessages(int what) {
++        return mExec.hasMessages(what);
++    }
++
++    /**
++     * Check if there are any pending posts of messages with code 'what' and
++     * whose obj is 'object' in the message queue.
++     */
++    public final boolean hasMessages(int what, Object object) {
++        return mExec.hasMessages(what, object);
++    }
++
++    public final Looper getLooper() {
++        return mExec.getLooper();
++    }
++
++    private WeakRunnable wrapRunnable(@NonNull Runnable r) {
++        //noinspection ConstantConditions
++        if (r == null) {
++            throw new NullPointerException("Runnable can't be null");
++        }
++        final ChainedRef hardRef = new ChainedRef(mLock, r);
++        mRunnables.insertAfter(hardRef);
++        return hardRef.wrapper;
++    }
++
++    private static class ExecHandler extends Handler {
++        private final WeakReference<Callback> mCallback;
++
++        ExecHandler() {
++            mCallback = null;
++        }
++
++        ExecHandler(WeakReference<Callback> callback) {
++            mCallback = callback;
++        }
++
++        ExecHandler(Looper looper) {
++            super(looper);
++            mCallback = null;
++        }
++
++        ExecHandler(Looper looper, WeakReference<Callback> callback) {
++            super(looper);
++            mCallback = callback;
++        }
++
++        @Override
++        public void handleMessage(@NonNull Message msg) {
++            if (mCallback == null) {
++                return;
++            }
++            final Callback callback = mCallback.get();
++            if (callback == null) { // Already disposed
++                return;
++            }
++            callback.handleMessage(msg);
++        }
++    }
++
++    static class WeakRunnable implements Runnable {
++        private final WeakReference<Runnable> mDelegate;
++        private final WeakReference<ChainedRef> mReference;
++
++        WeakRunnable(WeakReference<Runnable> delegate, WeakReference<ChainedRef> reference) {
++            mDelegate = delegate;
++            mReference = reference;
++        }
++
++        @Override
++        public void run() {
++            final Runnable delegate = mDelegate.get();
++            final ChainedRef reference = mReference.get();
++            if (reference != null) {
++                reference.remove();
++            }
++            if (delegate != null) {
++                delegate.run();
++            }
++        }
++    }
++
++    static class ChainedRef {
++        @Nullable
++        ChainedRef next;
++        @Nullable
++        ChainedRef prev;
++        @NonNull
++        final Runnable runnable;
++        @NonNull
++        final WeakRunnable wrapper;
++
++        @NonNull
++        Lock lock;
++
++        public ChainedRef(@NonNull Lock lock, @NonNull Runnable r) {
++            this.runnable = r;
++            this.lock = lock;
++            this.wrapper = new WeakRunnable(new WeakReference<>(r), new WeakReference<>(this));
++        }
++
++        public WeakRunnable remove() {
++            lock.lock();
++            try {
++                if (prev != null) {
++                    prev.next = next;
++                }
++                if (next != null) {
++                    next.prev = prev;
++                }
++                prev = null;
++                next = null;
++            } finally {
++                lock.unlock();
++            }
++            return wrapper;
++        }
++
++        public void insertAfter(@NonNull ChainedRef candidate) {
++            lock.lock();
++            try {
++                if (this.next != null) {
++                    this.next.prev = candidate;
++                }
++
++                candidate.next = this.next;
++                this.next = candidate;
++                candidate.prev = this;
++            } finally {
++                lock.unlock();
++            }
++        }
++
++        @Nullable
++        public WeakRunnable remove(Runnable obj) {
++            lock.lock();
++            try {
++                ChainedRef curr = this.next; // Skipping head
++                while (curr != null) {
++                    if (curr.runnable == obj) { // We do comparison exactly how Handler does inside
++                        return curr.remove();
++                    }
++                    curr = curr.next;
++                }
++            } finally {
++                lock.unlock();
++            }
++            return null;
++        }
++    }
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8.java b/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8.java
+new file mode 100644
+index 0000000..f5d308e
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8.java
+@@ -0,0 +1,113 @@
++package com.myapp.m3u8downloader.bean;
++
++import android.text.TextUtils;
++
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.List;
++
++import com.myapp.m3u8downloader.utils.MUtils;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/20
++ * 描    述: m3u8实体类
++ * ================================================
++ */
++public class M3U8 {
++    private String basePath;//去除后缀文件名的url
++    private String m3u8FilePath;//m3u8索引文件路径
++    private String dirFilePath;//切片文件目录
++    private long fileSize;//切片文件总大小
++    private long totalTime;//总时间，单位毫秒
++    private List<M3U8Ts> tsList = new ArrayList<M3U8Ts>();//视频切片
++
++    public String getBasePath() {
++        return basePath;
++    }
++
++    public void setBasePath(String basePath) {
++        this.basePath = basePath;
++    }
++
++    public String getM3u8FilePath() {
++        return m3u8FilePath;
++    }
++
++    public void setM3u8FilePath(String m3u8FilePath) {
++        this.m3u8FilePath = m3u8FilePath;
++    }
++
++    public String getDirFilePath() {
++        return dirFilePath;
++    }
++
++    public void setDirFilePath(String dirFilePath) {
++        this.dirFilePath = dirFilePath;
++    }
++
++    public long getFileSize() {
++        fileSize = 0;
++        for (M3U8Ts m3U8Ts : tsList){
++            fileSize = fileSize + m3U8Ts.getFileSize();
++        }
++        return fileSize;
++    }
++
++    public String getFormatFileSize() {
++        fileSize = getFileSize();
++        if (fileSize == 0)return "";
++        return MUtils.formatFileSize(fileSize);
++    }
++
++    public void setFileSize(long fileSize) {
++        this.fileSize = fileSize;
++    }
++
++    public List<M3U8Ts> getTsList() {
++        return tsList;
++    }
++
++    public void setTsList(List<M3U8Ts> tsList) {
++        this.tsList = tsList;
++    }
++
++    public void addTs(M3U8Ts ts) {
++        this.tsList.add(ts);
++    }
++
++    public long getTotalTime(){
++        totalTime = 0;
++        for (M3U8Ts m3U8Ts : tsList){
++            totalTime = totalTime + (int)(m3U8Ts.getSeconds() * 1000);
++        }
++        return totalTime;
++    }
++
++    @Override
++    public String toString() {
++        StringBuilder sb = new StringBuilder();
++        sb.append("basePath: " + basePath);
++        sb.append("\nm3u8FilePath: " + m3u8FilePath);
++        sb.append("\ndirFilePath: " + dirFilePath);
++        sb.append("\nfileSize: " + getFileSize());
++        sb.append("\nfileFormatSize: " + MUtils.formatFileSize(fileSize));
++        sb.append("\ntotalTime: " + totalTime);
++
++        for (M3U8Ts ts : tsList) {
++            sb.append("\nts: " + ts);
++        }
++        return sb.toString();
++    }
++
++    @Override
++    public boolean equals(Object obj) {
++        if (obj instanceof M3U8){
++            M3U8 m3U8 = (M3U8)obj;
++            if (basePath != null && basePath.equals(m3U8.basePath))return true;
++        }
++        return false;
++    }
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8Task.java b/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8Task.java
+new file mode 100644
+index 0000000..98acdb0
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8Task.java
+@@ -0,0 +1,86 @@
++package com.myapp.m3u8downloader.bean;
++
++import com.myapp.m3u8downloader.utils.MUtils;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/22
++ * 描    述: M3U8下载任务
++ * ================================================
++ */
++public class M3U8Task {
++
++    private String url;
++    private int state = M3U8TaskState.DEFAULT;
++    private long speed;
++    private float progress;
++    private M3U8 m3U8;
++
++    private M3U8Task(){}
++
++    public M3U8Task(String url){
++        this.url = url;
++    }
++
++    @Override
++    public boolean equals(Object obj) {
++        if (obj instanceof M3U8Task){
++            M3U8Task m3U8Task = (M3U8Task)obj;
++            if (url != null && url.equals(m3U8Task.getUrl()))return true;
++        }
++        return false;
++    }
++
++    public String getFormatSpeed() {
++        if (speed == 0)return "";
++        return MUtils.formatFileSize(speed) + "/s";
++    }
++
++    public String getFormatTotalSize() {
++        if (m3U8 == null)return "";
++        return m3U8.getFormatFileSize();
++    }
++
++    public float getProgress() {
++        return progress;
++    }
++
++    public void setProgress(float progress) {
++        this.progress = progress;
++    }
++
++    public String getUrl() {
++        return url;
++    }
++
++    public void setUrl(String url) {
++        this.url = url;
++    }
++
++    public int getState() {
++        return state;
++    }
++
++    public void setState(int state) {
++        this.state = state;
++    }
++
++    public long getSpeed() {
++        return speed;
++    }
++
++    public void setSpeed(long speed) {
++        this.speed = speed;
++    }
++
++    public M3U8 getM3U8() {
++        return m3U8;
++    }
++
++    public void setM3U8(M3U8 m3U8) {
++        this.m3U8 = m3U8;
++    }
++
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8TaskState.java b/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8TaskState.java
+new file mode 100644
+index 0000000..81cfa2a
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8TaskState.java
+@@ -0,0 +1,21 @@
++package com.myapp.m3u8downloader.bean;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/22
++ * 描    述:
++ * ================================================
++ */
++public class M3U8TaskState {
++    public static final int DEFAULT = 0;//默认状态
++    public static final int PENDING = -1;//下载排队
++    public static final int PREPARE = 1;//下载准备中
++    public static final int DOWNLOADING = 2;//下载中
++    public static final int SUCCESS = 3;//下载完成
++    public static final int ERROR = 4;//下载出错
++    public static final int PAUSE = 5;//下载暂停
++    public static final int ENOSPC = 6;//空间不足
++
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8Ts.java b/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8Ts.java
+new file mode 100644
+index 0000000..c9c37f8
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/bean/M3U8Ts.java
+@@ -0,0 +1,86 @@
++package com.myapp.m3u8downloader.bean;
++
++import androidx.annotation.NonNull;
++
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
++
++import com.myapp.m3u8downloader.utils.MD5Utils;
++
++/**
++ * m3u8切片类
++ * Created by HDL on 2017/7/24.
++ */
++
++public class M3U8Ts implements Comparable<M3U8Ts> {
++    private String url;
++    private long fileSize;
++    private float seconds;
++
++    public M3U8Ts(String url, float seconds) {
++        this.url = url;
++        this.seconds = seconds;
++    }
++
++    public String getUrl() {
++        return url;
++    }
++
++    public void setUrl(String url) {
++        this.url = url;
++    }
++
++    public float getSeconds() {
++        return seconds;
++    }
++
++    public void setSeconds(float seconds) {
++        this.seconds = seconds;
++    }
++
++    public String obtainEncodeTsFileName(){
++        if (url == null)return "error.ts";
++        return MD5Utils.encode(url).concat(".ts");
++    }
++
++    public String obtainFullUrl(String hostUrl){
++        if (url == null) {
++            return null;
++        }
++        if (url.startsWith("http")) {
++            return url;
++        }else if (url.startsWith("//")) {
++            return "http:".concat(url);
++        }else {
++            return hostUrl.concat(url);
++        }
++    }
++    @Override
++    public String toString() {
++        return url + " (" + seconds + "sec)";
++    }
++
++    /**
++     * 获取时间
++     */
++    public long getLongDate() {
++        try {
++            return Long.parseLong(url.substring(0, url.lastIndexOf(".")));
++        }catch (NumberFormatException e){
++            return 0;
++        }
++    }
++
++    @Override
++    public int compareTo(@NonNull M3U8Ts o) {
++        return url.compareTo(o.url);
++    }
++
++    public long getFileSize() {
++        return fileSize;
++    }
++
++    public void setFileSize(long fileSize) {
++        this.fileSize = fileSize;
++    }
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/server/EncryptM3U8Server.java b/android/app/src/main/java/com/myapp/m3u8downloader/server/EncryptM3U8Server.java
+new file mode 100644
+index 0000000..c79e4a4
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/server/EncryptM3U8Server.java
+@@ -0,0 +1,79 @@
++package com.myapp.m3u8downloader.server;
++
++import android.text.TextUtils;
++
++import java.io.File;
++import java.util.concurrent.ExecutorService;
++
++import com.myapp.m3u8downloader.M3U8Downloader;
++import com.myapp.m3u8downloader.M3U8EncryptHelper;
++import com.myapp.m3u8downloader.utils.M3U8Log;
++
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/12/18
++ * 描    述: 加密版m3u8 httpServer
++ * ================================================
++ */
++public class EncryptM3U8Server extends M3U8HttpServer {
++
++    public void encrypt(){
++        if (TextUtils.isEmpty(filesDir) || isEncrypt(filesDir))return;
++
++        new Thread(new Runnable() {
++            @Override
++            public void run() {
++                try {
++                    M3U8EncryptHelper.encryptTsFilesName(
++                            M3U8Downloader.getInstance().getEncryptKey()
++                            ,filesDir
++                    );
++                } catch (Exception e) {
++                    M3U8Log.e("M3u8Server encrypt: "+e.getMessage());
++                }
++            }
++        }).start();
++
++    }
++
++    public void decrypt(){
++        if (TextUtils.isEmpty(filesDir) || !isEncrypt(filesDir))return;
++        new Thread(new Runnable() {
++            @Override
++            public void run() {
++                try {
++                    M3U8EncryptHelper.decryptTsFilesName(
++                            M3U8Downloader.getInstance().getEncryptKey()
++                            ,filesDir
++                    );
++                } catch (Exception e) {
++                    M3U8Log.e("M3u8Server decrypt: "+e.getMessage());
++                }
++            }
++        }).start();
++
++    }
++
++    /**
++     * 文件夹文件是否已经加密,防止重复加密或解密
++     * @param dirPath
++     * @return
++     */
++    private boolean isEncrypt(String dirPath){
++        try {
++            File dirFile = new File(dirPath);
++            if (dirFile.exists() && dirFile.isDirectory()){
++                File[] files = dirFile.listFiles();
++                for (int i = 0; i < files.length; i++) {// 遍历目录下所有的文件
++                    if (files[i].getName().contains(".ts"))return false;
++                }
++            }
++        }catch (Exception e){
++        }
++        return true;
++    }
++
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/server/M3U8HttpServer.java b/android/app/src/main/java/com/myapp/m3u8downloader/server/M3U8HttpServer.java
+new file mode 100644
+index 0000000..aa73fbb
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/server/M3U8HttpServer.java
+@@ -0,0 +1,101 @@
++package com.myapp.m3u8downloader.server;
++
++import android.net.Uri;
++import java.io.File;
++import java.io.FileInputStream;
++import java.io.FileNotFoundException;
++import java.io.IOException;
++
++import fi.iki.elonen.NanoHTTPD;
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/12/21
++ * 描    述:
++ * ================================================
++ */
++public class M3U8HttpServer extends NanoHTTPD {
++
++    private NanoHTTPD server;
++    private static final int DEFAULT_PORT = 8686;
++    public String filesDir = null;
++    private FileInputStream fis;
++
++    public M3U8HttpServer() {
++        super(DEFAULT_PORT);
++    }
++
++    public String createLocalHttpUrl(String filePath){
++        Uri uri = Uri.parse(filePath);
++        String scheme = uri.getScheme();
++        if (null != scheme) {
++            filePath = uri.toString();
++        } else {
++            filePath = uri.getPath();
++        }
++        if (filePath != null){
++            filesDir = filePath.substring(0, filePath.lastIndexOf("/") + 1);
++            return String.format("http://127.0.0.1:%d%s", DEFAULT_PORT, filePath);
++        }
++        return null;
++    }
++
++    /**
++     * 启动服务
++     */
++    public void execute() {
++        try {
++            server = M3U8HttpServer.class.newInstance();
++            server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, true);
++        } catch (IOException ioe) {
++            System.exit(-1);
++        } catch (Exception e) {
++            System.exit(-1);
++        }
++
++    }
++
++    /**
++     * 关闭服务
++     */
++    public void finish() {
++        if(server != null){
++            server.stop();
++            server = null;
++        }
++    }
++
++    @Override
++    public Response serve(IHTTPSession session) {
++        String url = String.valueOf(session.getUri());
++        File file = new File(url);
++
++        Response response = newFixedLengthResponse(Response.Status.NOT_FOUND, "text/html", "文件不存在：" + url);
++        if(file.exists()){
++
++            try {
++                fis = new FileInputStream(file);
++            } catch (FileNotFoundException e) {
++                e.printStackTrace();
++                return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/html", "文件不存在：" + url);
++            }
++            // ts文件
++            String mimeType = "video/mpeg";
++            if(url.contains(".m3u8")){
++                // m3u8文件
++                mimeType = "video/x-mpegURL";
++            }
++
++            try {
++                response = newFixedLengthResponse(Response.Status.OK, mimeType, fis, fis.available());
++            } catch (IOException e) {
++
++            }
++
++        }
++
++        return response;
++    }
++}
++
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/utils/AES128Utils.java b/android/app/src/main/java/com/myapp/m3u8downloader/utils/AES128Utils.java
+new file mode 100644
+index 0000000..962e284
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/utils/AES128Utils.java
+@@ -0,0 +1,122 @@
++package com.myapp.m3u8downloader.utils;
++
++import java.io.UnsupportedEncodingException;
++import java.security.NoSuchAlgorithmException;
++
++import javax.crypto.Cipher;
++import javax.crypto.KeyGenerator;
++import javax.crypto.SecretKey;
++import javax.crypto.spec.SecretKeySpec;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/23
++ * 描    述: AES-128 加密解密工具类
++ * ================================================
++ */
++public class AES128Utils {
++
++    public final static String ENCODING = "UTF-8";
++
++    /**将二进制转换成16进制
++     * @param buf
++     * @return
++     */
++    public static String parseByte2HexStr(byte buf[]) {
++        StringBuffer sb = new StringBuffer();
++        for (int i = 0; i < buf.length; i++) {
++            String hex = Integer.toHexString(buf[i] & 0xFF);
++            if (hex.length() == 1) {
++                hex = '0' + hex;
++            }
++            sb.append(hex.toUpperCase());
++        }
++        return sb.toString();
++    }
++
++    /**将16进制转换为二进制
++     * @param hexStr
++     * @return
++     */
++    public static byte[] parseHexStr2Byte(String hexStr) {
++        if (hexStr.length() < 1)
++            return null;
++        byte[] result = new byte[hexStr.length()/2];
++        for (int i = 0;i< hexStr.length()/2; i++) {
++            int high = Integer.parseInt(hexStr.substring(i*2, i*2+1), 16);
++            int low = Integer.parseInt(hexStr.substring(i*2+1, i*2+2), 16);
++            result[i] = (byte) (high * 16 + low);
++        }
++        return result;
++    }
++
++    /**
++     * 生成密钥
++     * 自动生成base64 编码后的AES128位密钥
++     * @throws NoSuchAlgorithmException
++     * @throws UnsupportedEncodingException
++     */
++    public static String getAESKey() throws Exception {
++        KeyGenerator kg = KeyGenerator.getInstance("AES");
++        kg.init(128);
++        SecretKey sk = kg.generateKey();
++        byte[] b = sk.getEncoded();
++        return parseByte2HexStr(b);
++    }
++
++    /**
++     * AES 加密
++     * @param base64Key   base64编码后的 AES key
++     * @param text  待加密的字符串
++     * @return 加密后的byte[] 数组
++     * @throws Exception
++     */
++    public static byte[] getAESEncode(String base64Key, String text) throws Exception{
++        return getAESEncode(base64Key, text.getBytes());
++    }
++
++    /**
++     * AES 加密
++     * @param base64Key   base64编码后的 AES key
++     * @param bytes  待加密的bytes
++     * @return 加密后的byte[] 数组
++     * @throws Exception
++     */
++    public static byte[] getAESEncode(String base64Key, byte[] bytes) throws Exception{
++        if (base64Key == null)return bytes;
++        byte[] key = parseHexStr2Byte(base64Key);
++        SecretKeySpec sKeySpec = new SecretKeySpec(key, "AES");
++        Cipher cipher = Cipher.getInstance("AES");
++        cipher.init(Cipher.ENCRYPT_MODE, sKeySpec);
++        return cipher.doFinal(bytes);
++    }
++
++    /**
++     * AES解密
++     * @param base64Key   base64编码后的 AES key
++     * @param text  待解密的字符串
++     * @return 解密后的byte[] 数组
++     * @throws Exception
++     */
++    public static byte[] getAESDecode(String base64Key, String text) throws Exception{
++        return getAESDecode(base64Key, text.getBytes());
++    }
++
++    /**
++     * AES解密
++     * @param base64Key   base64编码后的 AES key
++     * @param bytes  待解密的字符串
++     * @return 解密后的byte[] 数组
++     * @throws Exception
++     */
++    public static byte[] getAESDecode(String base64Key, byte[] bytes) throws Exception{
++        if (base64Key == null)return bytes;
++        byte[] key = parseHexStr2Byte(base64Key);
++        SecretKeySpec sKeySpec = new SecretKeySpec(key, "AES");
++        Cipher cipher = Cipher.getInstance("AES");
++        cipher.init(Cipher.DECRYPT_MODE, sKeySpec);
++        return cipher.doFinal(bytes);
++    }
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/utils/M3U8Log.java b/android/app/src/main/java/com/myapp/m3u8downloader/utils/M3U8Log.java
+new file mode 100644
+index 0000000..65c6525
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/utils/M3U8Log.java
+@@ -0,0 +1,28 @@
++package com.myapp.m3u8downloader.utils;
++
++import android.util.Log;
++
++import com.myapp.m3u8downloader.M3U8DownloaderConfig;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/21
++ * 描    述: M3U8日志系统
++ * ================================================
++ */
++public class M3U8Log {
++
++    private static String TAG = "M3U8Log";
++
++    public static void d(String msg){
++        if (M3U8DownloaderConfig.isDebugMode()) Log.d(TAG, msg);
++    }
++
++    public static void e(String msg){
++        if (M3U8DownloaderConfig.isDebugMode()) Log.e(TAG, msg);
++    }
++
++
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/utils/MD5Utils.java b/android/app/src/main/java/com/myapp/m3u8downloader/utils/MD5Utils.java
+new file mode 100644
+index 0000000..aa362af
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/utils/MD5Utils.java
+@@ -0,0 +1,30 @@
++package com.myapp.m3u8downloader.utils;
++
++import java.math.BigInteger;
++import java.security.MessageDigest;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/27
++ * 描    述: MD5加密工具
++ * ================================================
++ */
++public class MD5Utils {
++
++    public static String encode(String str) {
++        try {
++            // 生成一个MD5加密计算摘要
++            MessageDigest md = MessageDigest.getInstance("MD5");
++            // 计算md5函数
++            md.update(str.getBytes());
++            // digest()最后确定返回md5 hash值，返回值为8为字符串。因为md5 hash值是16位的hex值，实际上就是8位的字符
++            // BigInteger函数则将8位的字符串转换成16位hex值，用字符串来表示；得到字符串形式的hash值
++            return new BigInteger(1, md.digest()).toString(16);
++        } catch (Exception e) {
++            e.printStackTrace();
++        }
++        return str;
++    }
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/utils/MUtils.java b/android/app/src/main/java/com/myapp/m3u8downloader/utils/MUtils.java
+new file mode 100644
+index 0000000..118d9d7
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/utils/MUtils.java
+@@ -0,0 +1,164 @@
++package com.myapp.m3u8downloader.utils;
++
++import java.io.BufferedReader;
++import java.io.BufferedWriter;
++import java.io.File;
++import java.io.FileInputStream;
++import java.io.FileOutputStream;
++import java.io.FileWriter;
++import java.io.IOException;
++import java.io.InputStreamReader;
++import java.net.URL;
++
++import com.myapp.m3u8downloader.M3U8DownloaderConfig;
++import com.myapp.m3u8downloader.bean.M3U8;
++import com.myapp.m3u8downloader.bean.M3U8Ts;
++
++/**
++ * ================================================
++ * 作    者：JayGoo
++ * 版    本：
++ * 创建日期：2017/11/18
++ * 描    述: 工具类
++ * ================================================
++ */
++
++public class MUtils {
++
++    /**
++     * 将Url转换为M3U8对象
++     *
++     * @param url
++     * @return
++     * @throws IOException
++     */
++    public static M3U8 parseIndex(String url) throws IOException {
++
++        BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
++
++        String basepath = url.substring(0, url.lastIndexOf("/") + 1);
++
++        M3U8 ret = new M3U8();
++        ret.setBasePath(basepath);
++
++        String line;
++        float seconds = 0;
++        while ((line = reader.readLine()) != null) {
++            if (line.startsWith("#")) {
++                if (line.startsWith("#EXTINF:")) {
++                    line = line.substring(8);
++                    if (line.endsWith(",")) {
++                        line = line.substring(0, line.length() - 1);
++                    }
++                    seconds = Float.parseFloat(line);
++                }
++                continue;
++            }
++            if (line.endsWith("m3u8")) {
++                return parseIndex(basepath + line);
++            }
++            ret.addTs(new M3U8Ts(line, seconds));
++            seconds = 0;
++        }
++        reader.close();
++
++        return ret;
++    }
++
++
++    /**
++     * 清空文件夹
++     */
++    public static boolean clearDir(File dir) {
++        if (dir.exists()) {// 判断文件是否存在
++            if (dir.isFile()) {// 判断是否是文件
++               return dir.delete();// 删除文件
++            } else if (dir.isDirectory()) {// 否则如果它是一个目录
++                File[] files = dir.listFiles();// 声明目录下所有的文件 files[];
++                for (int i = 0; i < files.length; i++) {// 遍历目录下所有的文件
++                    clearDir(files[i]);// 把每个文件用这个方法进行迭代
++                }
++                return dir.delete();// 删除文件夹
++            }
++        }
++        return true;
++    }
++
++
++    private static float KB = 1024;
++    private static float MB = 1024 * KB;
++    private static float GB = 1024 * MB;
++
++    /**
++     * 格式化文件大小
++     */
++    public static String formatFileSize(long size){
++        if (size >= GB) {
++            return String.format("%.1f GB", size / GB);
++        } else if (size >= MB) {
++            float value = size / MB;
++            return String.format(value > 100 ? "%.0f MB" : "%.1f MB", value);
++        } else if (size >= KB) {
++            float value =  size / KB;
++            return String.format(value > 100 ? "%.0f KB" : "%.1f KB", value);
++        } else {
++            return String.format("%d B", size);
++        }
++    }
++
++    /**
++     * 生成本地m3u8索引文件，ts切片和m3u8文件放在相同目录下即可
++     * @param m3u8Dir
++     * @param m3U8
++     */
++    public static File createLocalM3U8(File m3u8Dir, String fileName, M3U8 m3U8) throws IOException{
++        return createLocalM3U8(m3u8Dir, fileName, m3U8, null);
++    }
++
++    /**
++     * 生成AES-128加密本地m3u8索引文件，ts切片和m3u8文件放在相同目录下即可
++     * @param m3u8Dir
++     * @param m3U8
++     */
++    public static File createLocalM3U8(File m3u8Dir, String fileName, M3U8 m3U8, String keyPath) throws IOException{
++        File m3u8File = new File(m3u8Dir, fileName);
++        BufferedWriter bfw = new BufferedWriter(new FileWriter(m3u8File, false));
++        bfw.write("#EXTM3U\n");
++        bfw.write("#EXT-X-VERSION:3\n");
++        bfw.write("#EXT-X-MEDIA-SEQUENCE:0\n");
++        bfw.write("#EXT-X-TARGETDURATION:13\n");
++        for (M3U8Ts m3U8Ts : m3U8.getTsList()) {
++            if (keyPath != null) bfw.write("#EXT-X-KEY:METHOD=AES-128,URI=\""+keyPath+"\"\n");
++            bfw.write("#EXTINF:" + m3U8Ts.getSeconds()+",\n");
++            bfw.write(m3U8Ts.obtainEncodeTsFileName());
++            bfw.newLine();
++        }
++        bfw.write("#EXT-X-ENDLIST");
++        bfw.flush();
++        bfw.close();
++        return m3u8File;
++    }
++
++    public static byte[] readFile(String fileName) throws IOException{
++        File file = new File(fileName);
++        FileInputStream fis = new FileInputStream(file);
++        int length = fis.available();
++        byte [] buffer = new byte[length];
++        fis.read(buffer);
++        fis.close();
++        return buffer;
++    }
++
++    public static void saveFile(byte[] bytes, String fileName) throws IOException{
++        File file = new File(fileName);
++        FileOutputStream outputStream = new FileOutputStream(file);
++        outputStream.write(bytes);
++        outputStream.flush();
++        outputStream.close();
++    }
++
++    public static String getSaveFileDir(String url){
++        return M3U8DownloaderConfig.getSaveDir() + File.separator + MD5Utils.encode(url);
++    }
++
++}
+diff --git a/android/app/src/main/java/com/myapp/m3u8downloader/utils/SPHelper.java b/android/app/src/main/java/com/myapp/m3u8downloader/utils/SPHelper.java
+new file mode 100755
+index 0000000..6afd7d5
+--- /dev/null
++++ b/android/app/src/main/java/com/myapp/m3u8downloader/utils/SPHelper.java
+@@ -0,0 +1,105 @@
++package com.myapp.m3u8downloader.utils;
++
++import android.content.Context;
++import android.content.SharedPreferences;
++import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
++import android.util.Log;
++
++import java.util.Collections;
++import java.util.Set;
++
++public class SPHelper {
++
++    private static final String NULL_KEY = "NULL_KEY";
++    private static final String TAG_NAME = "M3U8PreferenceHelper";
++
++    private static SharedPreferences PREFERENCES;
++
++
++    public static void init(Context context) {
++        PREFERENCES = context.getSharedPreferences(TAG_NAME, Context.MODE_PRIVATE);
++    }
++
++    public static void onSetPrefBoolSetting(String Tag, Boolean Value, Context activityContext) {
++        if (Tag != null && Value != null && activityContext != null) {
++            SharedPreferences settings = activityContext.getSharedPreferences(TAG_NAME, 0);
++            settings.edit().putBoolean(Tag, Value).commit();
++        }
++    }
++
++    private static String checkKeyNonNull(String key) {
++        if (key == null) {
++            Log.e(NULL_KEY, "Key is null!!!");
++            return NULL_KEY;
++        }
++        return key;
++    }
++
++    private static SharedPreferences.Editor newEditor() {
++        return PREFERENCES.edit();
++    }
++
++    public static void putBoolean(@NonNull String key, boolean value) {
++        newEditor().putBoolean(checkKeyNonNull(key), value).apply();
++    }
++
++    public static boolean getBoolean(@NonNull String key, boolean defValue) {
++        return PREFERENCES.getBoolean(checkKeyNonNull(key), defValue);
++    }
++
++    public static void putInt(@NonNull String key, int value) {
++        newEditor().putInt(checkKeyNonNull(key), value).apply();
++    }
++
++    public static int getInt(@NonNull String key, int defValue) {
++        return PREFERENCES.getInt(checkKeyNonNull(key), defValue);
++    }
++
++    public static void putLong(@NonNull String key, long value) {
++        newEditor().putLong(checkKeyNonNull(key), value).apply();
++    }
++
++    public static long getLong(@NonNull String key, long defValue) {
++        return PREFERENCES.getLong(checkKeyNonNull(key), defValue);
++    }
++
++    public static void putFloat(@NonNull String key, float value) {
++        newEditor().putFloat(checkKeyNonNull(key), value).apply();
++    }
++
++    public static float getFloat(@NonNull String key, float defValue) {
++        return PREFERENCES.getFloat(checkKeyNonNull(key), defValue);
++    }
++
++    public static void putString(@NonNull String key, @Nullable String value) {
++        newEditor().putString(checkKeyNonNull(key), value).apply();
++    }
++
++    public static String getString(@NonNull String key, @Nullable String defValue) {
++        return PREFERENCES.getString(checkKeyNonNull(key), defValue);
++    }
++
++    public static void putStringSet(@NonNull String key, @Nullable Set<String> values) {
++        newEditor().putStringSet(checkKeyNonNull(key), values).apply();
++    }
++
++    public static Set<String> getStringSet(@NonNull String key, @Nullable Set<String> defValues) {
++        Set<String> result = PREFERENCES.getStringSet(checkKeyNonNull(key), defValues);
++        return result == null ? null : Collections.unmodifiableSet(result);
++    }
++
++    public static void increaseCount(String key) {
++        int count = getInt(key, 0);
++        putInt(key, ++count);
++    }
++
++    public static void remove(String key) {
++        newEditor().remove(key).apply();
++    }
++
++    public static void clearPreference() {
++        newEditor().clear().commit();
++    }
++
++}
+diff --git a/android/app/src/main/res/layout/player_layout_center_window.xml b/android/app/src/main/res/layout/player_layout_center_window.xml
+new file mode 100644
+index 0000000..fa93a38
+--- /dev/null
++++ b/android/app/src/main/res/layout/player_layout_center_window.xml
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:gravity="center" android:orientation="vertical" android:background="#96000000" android:layout_width="160dp" android:layout_height="120dp">
++    <ImageView android:id="@+id/iv_icon" android:layout_width="36dp" android:layout_height="36dp"/>
++    <TextView android:textSize="14sp" android:textColor="0x106000b" android:id="@+id/tv_percent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="10dp"/>
++    <ProgressBar android:id="@+id/pro_percent" android:layout_width="100dp" android:layout_height="3dp" android:max="100" android:progressDrawable="@drawable/player_layer_progress_bar" style="?unknown_attr_ref: 1010078"/>
++</LinearLayout>
+diff --git a/android/app/src/main/res/layout/player_layout_standard_controller.xml b/android/app/src/main/res/layout/player_layout_standard_controller.xml
+new file mode 100644
+index 0000000..8e96035
+--- /dev/null
++++ b/android/app/src/main/res/layout/player_layout_standard_controller.xml
+@@ -0,0 +1,39 @@
++<?xml version="1.0" encoding="utf-8"?>
++<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
++    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/top_container" android:background="@drawable/player_shape_standard_controller_top_bg" android:visibility="gone" android:layout_width="match_parent" android:layout_height="@dimen/player_controller_height">
++        <ImageView android:layout_gravity="center" android:id="@+id/back" android:padding="14dp" android:visibility="visible" android:layout_width="@dimen/player_controller_height" android:layout_height="@dimen/player_controller_height" android:src="@drawable/icon_video_back"/>
++        <com.nineone.IJKVideoPlayer.controller.MarqueeTextView android:textSize="@dimen/player_controller_text_size" android:textColor="0x106000b" android:ellipsize="marquee" android:id="@+id/title" android:paddingLeft="2dp" android:paddingRight="6dp" android:focusable="true" android:focusableInTouchMode="true" android:visibility="invisible" android:layout_width="0dp" android:layout_height="wrap_content" android:singleLine="true" android:layout_weight="1" android:marqueeRepeatLimit="marquee_forever"/>
++        <ImageView android:layout_gravity="center" android:id="@+id/iv_favorite" android:padding="@dimen/player_controller_icon_padding" android:visibility="gone" android:layout_width="@dimen/player_controller_height" android:layout_height="@dimen/player_controller_height" android:src="@drawable/icon_video_favorite"/>
++        <ImageView android:layout_gravity="center" android:id="@+id/iv_download" android:padding="@dimen/player_controller_icon_padding" android:visibility="gone" android:layout_width="@dimen/player_controller_height" android:layout_height="@dimen/player_controller_height" android:src="@drawable/icon_video_download"/>
++        <ImageView android:layout_gravity="center" android:id="@+id/iv_more" android:padding="@dimen/player_controller_icon_padding" android:visibility="visible" android:layout_width="@dimen/player_controller_height" android:layout_height="@dimen/player_controller_height" android:src="@drawable/icon_video_more"/>
++    </LinearLayout>
++    <LinearLayout android:gravity="center_vertical" android:layout_gravity="bottom" android:orientation="horizontal" android:id="@+id/bottom_container" android:background="@drawable/player_shape_stardard_controller_bottom_bg" android:visibility="gone" android:layout_width="match_parent" android:layout_height="@dimen/player_controller_height">
++        <ImageView android:id="@+id/iv_play" android:padding="16dp" android:layout_width="@dimen/player_controller_height" android:layout_height="@dimen/player_controller_height" android:src="@drawable/player_selector_play_button"/>
++        <TextView android:textSize="@dimen/player_controller_time_text_size" android:textColor="0x106000b" android:id="@+id/curr_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00"/>
++        <SeekBar android:layout_gravity="center_vertical" android:id="@+id/seekBar" android:background="@null" android:layout_width="0dp" android:layout_height="wrap_content" android:maxHeight="2dp" android:max="1000" android:progressDrawable="@drawable/player_layer_progress_bar" android:thumb="@drawable/player_seekbar_thumb" android:thumbOffset="0dp" android:layout_weight="1" android:paddingStart="0dp" android:paddingEnd="0dp" android:layout_marginStart="10dp" android:layout_marginEnd="10dp"/>
++        <TextView android:textSize="@dimen/player_controller_time_text_size" android:textColor="0x106000b" android:id="@+id/total_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00"/>
++        <TextView android:textSize="@dimen/player_controller_time_text_size" android:textColor="0x106000b" android:id="@+id/tv_play_speed" android:visibility="gone" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="@dimen/player_default_spacing" android:layout_marginRight="10dp" android:text="1.0x倍速" android:layout_marginStart="@dimen/player_default_spacing"/>
++        <TextView android:textSize="@dimen/player_controller_time_text_size" android:textColor="0x106000b" android:id="@+id/tv_video_difinition" android:visibility="gone" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="@dimen/player_default_spacing" android:layout_marginRight="@dimen/player_controller_icon_padding" android:text="超清" android:layout_marginStart="@dimen/player_default_spacing"/>
++        <ImageView android:id="@+id/fullscreen" android:padding="16dp" android:visibility="visible" android:layout_width="@dimen/player_controller_height" android:layout_height="@dimen/player_controller_height" android:src="@drawable/icon_video_fullscreen"/>
++    </LinearLayout>
++    <ImageView android:layout_gravity="left|center_vertical|center_horizontal|center|start" android:id="@+id/lock" android:background="@drawable/player_shape_back_bg" android:padding="@dimen/player_default_spacing" android:visibility="gone" android:layout_width="40dp" android:layout_height="40dp" android:layout_margin="24dp" android:src="@drawable/player_selector_lock_button"/>
++    <ImageView android:layout_gravity="left|center_vertical|center_horizontal|center|start" android:id="@+id/back_ward" android:visibility="gone" android:layout_width="40dp" android:layout_height="40dp" android:layout_margin="79dp" android:src="@drawable/icon_video_backward"/>
++    <ProgressBar android:layout_gravity="bottom" android:id="@+id/bottom_progress" android:visibility="visible" android:layout_width="match_parent" android:layout_height="1dp" android:max="1000" android:progressDrawable="@drawable/player_layer_progress_bar" style="?unknown_attr_ref: 1010078"/>
++    <LinearLayout android:gravity="center" android:layout_gravity="center" android:orientation="vertical" android:id="@+id/complete_container" android:visibility="invisible" android:layout_width="200dp" android:layout_height="150dp">
++        <ImageView android:layout_gravity="center" android:id="@+id/iv_replay" android:background="@drawable/player_shape_play_bg" android:padding="@dimen/player_controller_icon_padding" android:layout_width="@dimen/player_play_btn_size" android:layout_height="@dimen/player_play_btn_size" android:src="@drawable/icon_video_replay"/>
++        <TextView android:textColor="0x106000b" android:padding="@dimen/player_controller_icon_padding" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/player_replay"/>
++    </LinearLayout>
++    <ImageView android:layout_gravity="center" android:id="@+id/start_play" android:background="@drawable/player_shape_play_bg" android:padding="16dp" android:layout_width="@dimen/player_play_btn_size" android:layout_height="@dimen/player_play_btn_size" android:src="@drawable/player_selector_play_button"/>
++    <ProgressBar android:layout_gravity="center" android:id="@+id/loading" android:visibility="invisible" android:layout_width="@dimen/player_play_btn_size" android:layout_height="@dimen/player_play_btn_size" android:indeterminateDrawable="@drawable/player_progress_loading"/>
++    <ImageView android:layout_gravity="right|center_vertical|center_horizontal|center|end" android:id="@+id/for_ward" android:visibility="gone" android:layout_width="40dp" android:layout_height="40dp" android:layout_margin="82dp" android:src="@drawable/icon_video_forward"/>
++    <LinearLayout android:gravity="center" android:layout_gravity="right|center_vertical|center_horizontal|center|end" android:orientation="vertical" android:id="@+id/right_container" android:visibility="gone" android:layout_width="@dimen/player_controller_height" android:layout_height="match_parent" android:layout_margin="24dp">
++        <ImageView android:id="@+id/iv_capture" android:visibility="visible" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginTop="6dp" android:layout_marginBottom="6dp" android:src="@drawable/icon_video_capture"/>
++        <ImageView android:id="@+id/iv_comment" android:visibility="gone" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginTop="6dp" android:layout_marginBottom="6dp" android:src="@drawable/icon_video_comment"/>
++    </LinearLayout>
++    <LinearLayout android:gravity="center" android:layout_gravity="center" android:orientation="horizontal" android:id="@+id/liner_select_container" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent">
++        <ImageView android:id="@+id/liner_select_left" android:visibility="visible" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"/>
++        <LinearLayout android:gravity="center" android:layout_gravity="center" android:orientation="horizontal" android:id="@+id/liner_select_container_inner" android:background="@color/popup_background_color" android:visibility="visible" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
++            <ListView android:id="@+id/popup_select_list" android:scrollbars="none" android:layout_width="match_parent" android:layout_height="wrap_content" android:choiceMode="singleChoice"/>
++        </LinearLayout>
++    </LinearLayout>
++</FrameLayout>
+diff --git a/android/app/src/main/res/layout/player_layout_status_view.xml b/android/app/src/main/res/layout/player_layout_status_view.xml
+new file mode 100644
+index 0000000..84625a2
+--- /dev/null
++++ b/android/app/src/main/res/layout/player_layout_status_view.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="utf-8"?>
++<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent">
++    <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
++        <TextView android:textColor="0x106000b" android:gravity="center" android:id="@+id/message" android:padding="10dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
++        <TextView android:textColor="0x106000b" android:gravity="center" android:id="@+id/status_btn" android:background="@drawable/player_shape_status_view_btn" android:paddingLeft="10dp" android:paddingRight="10dp" android:layout_width="wrap_content" android:layout_height="26dp"/>
++    </LinearLayout>
++</FrameLayout>
+diff --git a/android/build.gradle b/android/build.gradle
+index 93232f5..612259e 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -21,6 +21,12 @@ buildscript {
+ 
+ allprojects {
+     repositories {
++        maven {
++            url 'https://maven.aliyun.com/repository/public/'
++        }
++        maven {
++            url 'https://maven.aliyun.com/repository/spring/'
++        }
+         mavenLocal()
+         maven {
+             // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+diff --git a/android/settings.gradle b/android/settings.gradle
+index 2526790..32b7282 100644
+--- a/android/settings.gradle
++++ b/android/settings.gradle
+@@ -1,4 +1,6 @@
+ rootProject.name = 'MyApp'
++include ':react-native-ijkplayer'
++project(':react-native-ijkplayer').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-ijkplayer/android')
+ include ':rn-ijkplayer'
+ project(':rn-ijkplayer').projectDir = new File(rootProject.projectDir, '../node_modules/rn-ijkplayer/android')
+ include ':@react-native-async-storage_async-storage'
+diff --git a/package-lock.json b/package-lock.json
+index e7f216d..ccf0f6e 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -3338,24 +3338,6 @@
+       "resolved": "https://registry.npmjs.org/encodeurl/-/encodeurl-1.0.2.tgz",
+       "integrity": "sha1-rT/0yG7C0CkyL1oCw6mmBslbP1k="
+     },
+-    "encoding": {
+-      "version": "0.1.13",
+-      "resolved": "https://registry.npmjs.org/encoding/-/encoding-0.1.13.tgz",
+-      "integrity": "sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==",
+-      "requires": {
+-        "iconv-lite": "^0.6.2"
+-      },
+-      "dependencies": {
+-        "iconv-lite": {
+-          "version": "0.6.2",
+-          "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.6.2.tgz",
+-          "integrity": "sha512-2y91h5OpQlolefMPmUlivelittSWy0rP+oYVpn6A7GwVHNE8AWzoYOBNmlwks3LobaJxgHCYZAnyNo2GgpNRNQ==",
+-          "requires": {
+-            "safer-buffer": ">= 2.1.2 < 3.0.0"
+-          }
+-        }
+-      }
+-    },
+     "end-of-stream": {
+       "version": "1.4.4",
+       "resolved": "https://registry.npmjs.org/end-of-stream/-/end-of-stream-1.4.4.tgz",
+@@ -4872,26 +4854,6 @@
+       "resolved": "https://registry.npmjs.org/isobject/-/isobject-3.0.1.tgz",
+       "integrity": "sha1-TkMekrEalzFjaqH5yNHMvP2reN8="
+     },
+-    "isomorphic-fetch": {
+-      "version": "2.2.1",
+-      "resolved": "https://registry.npmjs.org/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz",
+-      "integrity": "sha1-YRrhrPFPXoH3KVB0coGf6XM1WKk=",
+-      "requires": {
+-        "node-fetch": "^1.0.1",
+-        "whatwg-fetch": ">=0.10.0"
+-      },
+-      "dependencies": {
+-        "node-fetch": {
+-          "version": "1.7.3",
+-          "resolved": "https://registry.npmjs.org/node-fetch/-/node-fetch-1.7.3.tgz",
+-          "integrity": "sha512-NhZ4CsKx7cYm2vSrBAr2PvFOe6sWDf0UYLRqA6svUYg7+/TSfVAu49jYC4BvQ4Sms9SZgdqGBgroqfDhJdTyKQ==",
+-          "requires": {
+-            "encoding": "^0.1.11",
+-            "is-stream": "^1.0.1"
+-          }
+-        }
+-      }
+-    },
+     "isstream": {
+       "version": "0.1.2",
+       "resolved": "https://registry.npmjs.org/isstream/-/isstream-0.1.2.tgz",
+@@ -7200,44 +7162,6 @@
+         "object-assign": "^4.1.1"
+       }
+     },
+-    "react-addons-shallow-compare": {
+-      "version": "15.6.2",
+-      "resolved": "https://registry.npmjs.org/react-addons-shallow-compare/-/react-addons-shallow-compare-15.6.2.tgz",
+-      "integrity": "sha1-GYoAuR/DdiPbZKKP0XtZa6NicC8=",
+-      "requires": {
+-        "fbjs": "^0.8.4",
+-        "object-assign": "^4.1.0"
+-      },
+-      "dependencies": {
+-        "core-js": {
+-          "version": "1.2.7",
+-          "resolved": "https://registry.npmjs.org/core-js/-/core-js-1.2.7.tgz",
+-          "integrity": "sha1-ZSKUwUZR2yj6k70tX/KYOk8IxjY="
+-        },
+-        "fbjs": {
+-          "version": "0.8.17",
+-          "resolved": "https://registry.npmjs.org/fbjs/-/fbjs-0.8.17.tgz",
+-          "integrity": "sha1-xNWY6taUkRJlPWWIsBpc3Nn5D90=",
+-          "requires": {
+-            "core-js": "^1.0.0",
+-            "isomorphic-fetch": "^2.1.1",
+-            "loose-envify": "^1.0.0",
+-            "object-assign": "^4.1.0",
+-            "promise": "^7.1.1",
+-            "setimmediate": "^1.0.5",
+-            "ua-parser-js": "^0.7.18"
+-          }
+-        },
+-        "promise": {
+-          "version": "7.3.1",
+-          "resolved": "https://registry.npmjs.org/promise/-/promise-7.3.1.tgz",
+-          "integrity": "sha512-nolQXZ/4L+bP/UGlkfaIujX9BKxGwmQ9OT4mOt5yvy8iK1h3wqTEJCijzGANTCCl9nWjY41juyAn2K3Q1hLLTg==",
+-          "requires": {
+-            "asap": "~2.0.3"
+-          }
+-        }
+-      }
+-    },
+     "react-devtools-core": {
+       "version": "4.10.1",
+       "resolved": "https://registry.npmjs.org/react-devtools-core/-/react-devtools-core-4.10.1.tgz",
+@@ -7393,6 +7317,11 @@
+         "prop-types": "^15.7.2"
+       }
+     },
++    "react-native-ijkplayer": {
++      "version": "0.3.9",
++      "resolved": "https://registry.nlark.com/react-native-ijkplayer/download/react-native-ijkplayer-0.3.9.tgz",
++      "integrity": "sha1-bFCxOXcZ4P3Yu3jFZ+JNCAyE6MQ="
++    },
+     "react-native-iphone-x-helper": {
+       "version": "1.3.1",
+       "resolved": "https://registry.npmjs.org/react-native-iphone-x-helper/-/react-native-iphone-x-helper-1.3.1.tgz",
+@@ -7439,15 +7368,6 @@
+       "resolved": "https://registry.npm.taobao.org/react-native-screens/download/react-native-screens-3.1.1.tgz",
+       "integrity": "sha1-LNRJbF4+0f+693liuPzBC+OvIVg="
+     },
+-    "react-native-snap-carousel": {
+-      "version": "3.9.1",
+-      "resolved": "https://registry.npmjs.org/react-native-snap-carousel/-/react-native-snap-carousel-3.9.1.tgz",
+-      "integrity": "sha512-xWEGusacIgK1YaDXLi7Gao2+ISLoGPVEBR8fcMf4tOOJQufutlNwkoLu0l6B8Qgsrre0nTxoVZikRgGRDWlLaQ==",
+-      "requires": {
+-        "prop-types": "^15.6.1",
+-        "react-addons-shallow-compare": "15.6.2"
+-      }
+-    },
+     "react-native-splash-screen": {
+       "version": "3.2.0",
+       "resolved": "https://registry.npm.taobao.org/react-native-splash-screen/download/react-native-splash-screen-3.2.0.tgz",
+@@ -7956,7 +7876,8 @@
+     "safer-buffer": {
+       "version": "2.1.2",
+       "resolved": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz",
+-      "integrity": "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="
++      "integrity": "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==",
++      "dev": true
+     },
+     "sane": {
+       "version": "4.1.0",
+diff --git a/package.json b/package.json
+index 5528a78..7ac03ba 100644
+--- a/package.json
++++ b/package.json
+@@ -12,18 +12,17 @@
+   "dependencies": {
+     "@react-native-async-storage/async-storage": "^1.15.4",
+     "@react-native-community/masked-view": "^0.1.10",
+-    "@types/react-native-snap-carousel": "^3.8.2",
+     "mobx": "^5.5.0",
+     "mobx-react": "^5.2.8",
+     "mobx-state-tree": "^3.5.0",
+     "react": "17.0.1",
+     "react-native": "0.64.0",
+     "react-native-gesture-handler": "^1.10.3",
++    "react-native-ijkplayer": "^0.3.9",
+     "react-native-orientation": "^3.1.3",
+     "react-native-reanimated": "^2.1.0",
+     "react-native-safe-area-context": "^3.2.0",
+     "react-native-screens": "^3.1.1",
+-    "react-native-snap-carousel": "^3.9.1",
+     "react-native-splash-screen": "^3.2.0",
+     "react-native-swiper": "^1.6.0",
+     "react-native-vector-icons": "^8.1.0",
+diff --git a/src/video/VideoInfoPage.tsx b/src/video/VideoInfoPage.tsx
+new file mode 100644
+index 0000000..8242a07
+--- /dev/null
++++ b/src/video/VideoInfoPage.tsx
+@@ -0,0 +1,111 @@
++// import RNIJKPlayer from 'react-native-ijkplayer';
++import React from 'react';
++import {Button, Dimensions, StyleSheet, Animated, View} from 'react-native';
++import {StackNavigationProp} from 'react-navigation-stack/lib/typescript/src/vendor/types';
++import {NavigationParams, NavigationState} from 'react-navigation';
++import RCTIJKPlayerWithController from 'react-native-ijkplayer/RCTIJKPlayerWithController';
++
++interface Props {
++  navigation: StackNavigationProp<NavigationState, NavigationParams>;
++}
++
++export default class VideoInfoPage extends React.Component<Props> {
++  rctijkplayer = null;
++
++  constructor(props: Props) {
++    super(props);
++    this.state = {
++      playBackInfo: {},
++      fadeAnim: new Animated.Value(1),
++      hasController: false,
++    };
++  }
++
++  componentDidMount() {
++    let url =
++      'http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear1/prog_index.m3u8';
++    // let url = "/Users/cong/Downloads/111.mov";
++    this.rctijkplayer.start({url: url});
++  }
++
++  render() {
++    return (
++      <View style={styles.container}>
++        <RCTIJKPlayerWithController
++          ref={rctijkplayer => {
++            this.rctijkplayer = rctijkplayer;
++          }}
++          style={styles.player}
++          height={1920 / 2}
++          width={width}
++          left={0}
++          top={100}
++        />
++        <Button
++          title={'Splash Page'}
++          onPress={() => {
++            this.props.navigation.replace('AuthApp');
++          }}
++        />
++      </View>
++    );
++  }
++}
++
++const {width} = Dimensions.get('screen');
++
++const styles = StyleSheet.create({
++  container: {
++    flex: 1,
++  },
++  player: {
++    width: 120,
++    height: 120,
++    backgroundColor: 'rgba(0,0,0,1)',
++  },
++  rootContainer: {
++    flex: 1,
++    flexDirection: 'column',
++    backgroundColor: '#ff0000',
++  },
++  container2: {
++    height: (width / 1920) * 1080,
++    backgroundColor: '#ffff00',
++    justifyContent: 'center',
++    alignItems: 'center',
++  },
++  container1: {
++    flex: 1,
++    backgroundColor: '#ffff00',
++    justifyContent: 'center',
++    alignItems: 'center',
++  },
++  coverContainer: {
++    flexDirection: 'row',
++    position: 'absolute',
++    top: 0,
++    left: 0,
++    bottom: 0,
++    right: 0,
++  },
++  indicator: {
++    backgroundColor: '#f0e000',
++    alignSelf: 'center',
++  },
++  backgroundVideo1: {
++    position: 'absolute',
++    top: 0,
++    left: 0,
++    bottom: 0,
++    right: 0,
++    backgroundColor: '#880099',
++  },
++  backgroundVideo: {
++    position: 'absolute',
++    top: 0,
++    left: 0,
++    bottom: 0,
++    right: 0,
++    backgroundColor: '#88ff99',
++  },
++});
+diff --git a/src/video/index.d.ts b/src/video/index.d.ts
+new file mode 100644
+index 0000000..b1e2514
+--- /dev/null
++++ b/src/video/index.d.ts
+@@ -0,0 +1,2 @@
++declare module 'react-native-ijkplayer';
++declare module 'react-native-ijkplayer/RCTIJKPlayerWithController';
+-- 
+2.24.3 (Apple Git-128)
+

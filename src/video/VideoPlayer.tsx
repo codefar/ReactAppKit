@@ -1,8 +1,8 @@
 import React, {Component} from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import Video from 'react-native-video';
 import {NavigationStackProp} from 'react-navigation-stack';
 import {NavigationParams, NavigationRoute} from 'react-navigation';
+import Video from 'react-native-video';
 
 interface Props {
   navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
@@ -135,8 +135,7 @@ export default class VideoPlayer extends Component<Props, State> {
               this.video = c;
             }}
             source={{
-              uri:
-                'https://vd3.bdstatic.com/mda-mbsravd40w3qp0u3/v1-cae/1080p/mda-mbsravd40w3qp0u3.mp4',
+              uri: './broadchurch.mp4',
             }}
             onEnd={() => {}}
             resizeMode="stretch"

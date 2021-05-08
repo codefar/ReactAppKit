@@ -1,7 +1,8 @@
 import React from 'react';
-import {Button, View} from 'react-native';
+import {Button, StyleSheet, Text, View} from 'react-native';
 import {NavigationStackProp} from 'react-navigation-stack';
 import {NavigationParams, NavigationRoute} from 'react-navigation';
+import NavigationService from '../../NavigationService';
 
 interface Props {
   navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
@@ -10,52 +11,29 @@ interface Props {
 export default class MinePage extends React.Component<Props> {
   render() {
     return (
-      <View style={{flex: 1, flexDirection: 'column', alignItems: 'center'}}>
-        <View style={{margin: 5}}>
+      <View style={styles.container}>
+        <Text>MinePage Screen</Text>
+        <View style={{margin: 15}}>
           <Button
-            title={'IconListPage'}
+            title={'Switch To Find Tab'}
             onPress={() => {
-              this.props.navigation.push('IconListPage');
+              NavigationService.navigate('Find', {userId: '333999'});
             }}
           />
         </View>
-        <View style={{margin: 5}}>
+        <View style={{margin: 15}}>
           <Button
-            title={'VideoPlayer App'}
+            title={'Switch To VideoPlayerController'}
             onPress={() => {
-              this.props.navigation.push('VideoPlayer');
+              NavigationService.navigate('VideoPlayerController', {});
             }}
           />
         </View>
-        <View style={{margin: 5}}>
+        <View style={{margin: 15}}>
           <Button
-            title={'OrientationPage App'}
+            title={'Switch To MediaControls'}
             onPress={() => {
-              this.props.navigation.push('OrientationPage');
-            }}
-          />
-        </View>
-        <View style={{margin: 5}}>
-          <Button
-            title={'Profile App'}
-            onPress={() => {
-              this.props.navigation.push('ProfileScreen');
-            }}
-          />
-        </View>
-        <View style={{margin: 5}}>
-          <Button
-            title={'VideoPage App'}
-            onPress={() => {
-              this.props.navigation.push('VideoPage');
-            }}
-          />
-        </View>
-        <View style={{margin: 5}}>
-          <Button
-            title={'SignOutPage App'}
-            onPress={() => {
-              this.props.navigation.push('SignOutScreen');
+              NavigationService.navigate('MediaControls', {});
             }}
           />
         </View>
@@ -63,3 +41,12 @@ export default class MinePage extends React.Component<Props> {
     );
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
