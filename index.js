@@ -5,4 +5,4 @@ import MainApp from './src/main/MainApp';
 import AuthApp from './src/login/AuthApp';
 // import AuthApp from './src/login/AuthApp';
 
-AppRegistry.registerComponent('MyApp', () => MainApp);
+AppRegistry.registerComponent('MyApp', () => App);
