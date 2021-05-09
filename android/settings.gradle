@@ -1,4 +1,8 @@
 rootProject.name = 'ReactAppKit'
+include ':react-native-easy-ijkplayer'
+project(':react-native-easy-ijkplayer').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-easy-ijkplayer/android')
+include ':react-native-pager-view'
+project(':react-native-pager-view').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-pager-view/android')
 include ':react-native-ijkplayer'
 project(':react-native-ijkplayer').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-ijkplayer/android')
 include ':@react-native-async-storage_async-storage'
