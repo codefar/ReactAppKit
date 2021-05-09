@@ -11,7 +11,6 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import React from 'react';
 import NavigationService from '../NavigationService';
 import {createAppContainer} from 'react-navigation';
-import VideoPlayerController from '../video/VideoPlayerController';
 import MediaControls from '../video/MediaControls';
 
 const MainTabNavigator = createBottomTabNavigator(
@@ -72,9 +71,6 @@ const TopLevelNavigator = createStackNavigator(
     },
     VideoPlayer: {
       screen: VideoPlayer,
-    },
-    VideoPlayerController: {
-      screen: VideoPlayerController,
     },
     MediaControls: {
       screen: MediaControls,

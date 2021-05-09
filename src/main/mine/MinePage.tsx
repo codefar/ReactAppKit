@@ -23,14 +23,6 @@ export default class MinePage extends React.Component<Props> {
         </View>
         <View style={{margin: 15}}>
           <Button
-            title={'Switch To VideoPlayerController'}
-            onPress={() => {
-              NavigationService.navigate('VideoPlayerController', {});
-            }}
-          />
-        </View>
-        <View style={{margin: 15}}>
-          <Button
             title={'Switch To MediaControls'}
             onPress={() => {
               NavigationService.navigate('MediaControls', {});
