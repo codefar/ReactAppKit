@@ -1,7 +1,6 @@
 import {createStackNavigator, TransitionPresets} from 'react-navigation-stack';
 import VideoPage from '../video/VideoPage';
 import BusinessApp from '../business/BusinessApp';
-import VideoPlayer from '../video/VideoPlayer';
 import {createBottomTabNavigator} from 'react-navigation-tabs';
 import HomePage from './home/HomePage';
 import FindPage from './find/FindPage';
@@ -13,6 +12,7 @@ import NavigationService from '../NavigationService';
 import {createAppContainer} from 'react-navigation';
 import MediaControls from '../video/MediaControls';
 import CarouselPage from '../component/App';
+import VideoPlayerController from '../video/VideoPlayerController';
 
 const MainTabNavigator = createBottomTabNavigator(
   {
@@ -70,9 +70,9 @@ const TopLevelNavigator = createStackNavigator(
     BusinessApp: {
       screen: BusinessApp,
     },
-    VideoPlayer: {
-      screen: VideoPlayer,
-    },
+    // VideoPlayerController: {
+    //   screen: VideoPlayerController,
+    // },
     MediaControls: {
       screen: MediaControls,
     },

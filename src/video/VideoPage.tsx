@@ -4,13 +4,22 @@ import {
   View,
   ActivityIndicator,
   Dimensions,
-  Text,
   Button,
+  Alert,
+  Text,
 } from 'react-native';
-import Video, {OnLoadData} from 'react-native-video';
+import Video, {
+  OnBandwidthUpdateData,
+  OnLoadData,
+  OnProgressData,
+  OnSeekData,
+} from 'react-native-video';
+import Slider from 'react-native-slider';
 import Orientation from 'react-native-orientation';
 import {observer} from 'mobx-react';
-import {action, observable} from 'mobx';
+import {action, computed, observable} from 'mobx';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import {TouchableWithoutFeedback} from 'react-native-gesture-handler';
 
 @observer
 export default class VideoPage extends React.Component {
@@ -18,6 +27,13 @@ export default class VideoPage extends React.Component {
   @observable data: OnLoadData | null = null;
   @observable
   orientation: Orientation.orientation | null = Orientation.getInitialOrientation();
+  @observable rate: number = 1;
+  @observable volume: number = 3;
+  @observable muted: boolean = false;
+  @observable resizeMode: string = '';
+  @observable duration: number = 0;
+  @observable currentTime: number = 0;
+  @observable paused: boolean = false;
 
   componentDidMount() {
     Orientation.lockToPortrait();
@@ -34,6 +50,19 @@ export default class VideoPage extends React.Component {
   private onLoad = (data: OnLoadData) => {
     console.log('onLoad' + JSON.stringify(data));
     this.data = data;
+    this.duration = data.duration;
+  };
+
+  @action
+  onProgress = (data: OnProgressData) => {
+    console.log('onProgress ' + JSON.stringify(data));
+    this.currentTime = data.currentTime;
+  };
+
+  @action
+  onEnd = () => {
+    console.log('onEnd');
+    this.paused = true;
   };
 
   private onBuffer = () => {
@@ -68,6 +97,20 @@ export default class VideoPage extends React.Component {
     );
   };
 
+  _handleVideoInfo = () => {
+    Alert.alert('', JSON.stringify(this.data));
+  };
+
+  @computed
+  get getCurrentTimePercentage() {
+    if (this.currentTime > 0 && this.duration > 0) {
+      return (
+        parseFloat(String(this.currentTime)) / parseFloat(String(this.duration))
+      );
+    }
+    return 0;
+  }
+
   render() {
     let videoStyle =
       this.orientation === 'PORTRAIT'
@@ -87,21 +130,81 @@ export default class VideoPage extends React.Component {
               uri:
                 'https://vd3.bdstatic.com/mda-mbsravd40w3qp0u3/v1-cae/1080p/mda-mbsravd40w3qp0u3.mp4',
             }}
-            onEnd={() => {}}
+            paused={this.paused}
+            useTextureView
+            hideShutterView
+            audioOnly
             resizeMode="stretch"
             posterResizeMode="contain"
+            progressUpdateInterval={1000}
             onLoad={this.onLoad}
+            onLoadStart={this.onLoadStart}
             onBuffer={this.onBuffer} // Callback when remote video is buffering
             onError={this.onError}
-            onLoadStart={this.onLoadStart}
+            onProgress={this.onProgress}
+            onBandwidthUpdate={(data: OnBandwidthUpdateData) => {
+              console.log('onBandwidthUpdate ' + JSON.stringify(data));
+            }}
+            onSeek={(data: OnSeekData) => {
+              console.log('onSeek ' + JSON.stringify(data));
+            }}
+            onEnd={this.onEnd}
+            onFullscreenPlayerWillPresent={() => {
+              console.log('onFullscreenPlayerWillPresent');
+            }}
+            onFullscreenPlayerDidPresent={() => {
+              console.log('onFullscreenPlayerDidPresent');
+            }}
+            onFullscreenPlayerWillDismiss={() => {
+              console.log('onFullscreenPlayerWillDismiss');
+            }}
+            onFullscreenPlayerDidDismiss={() => {
+              console.log('onFullscreenPlayerDidDismiss');
+            }}
+            onVideoLoadStart={() => {
+              console.log('onVideoLoadStart');
+            }}
+            onVideoLoad={() => {
+              console.log('onVideoLoad');
+            }}
+            onVideoEnd={() => {
+              console.log('onVideoEnd');
+            }}
+            onVideoProgress={() => {
+              console.log('onVideoProgress');
+            }}
+            onVideoBuffer={() => {
+              console.log('onVideoBuffer');
+            }}
+            onVideoError={() => {
+              console.log('onVideoError');
+            }}
+            onVideoSeek={() => {
+              console.log('onVideoSeek');
+            }}
+            onTimedMetadata={() => {
+              console.log('onTimedMetadata');
+            }}
+            onVideoFullscreenPlayerWillPresent={() => {
+              console.log('onVideoFullscreenPlayerWillPresent');
+            }}
+            onVideoFullscreenPlayerDidPresent={() => {
+              console.log('onVideoFullscreenPlayerDidPresent');
+            }}
+            onVideoFullscreenPlayerWillDismiss={() => {
+              console.log('onVideoFullscreenPlayerWillDismiss');
+            }}
+            onVideoFullscreenPlayerDidDismiss={() => {
+              console.log('onVideoFullscreenPlayerDidDismiss');
+            }}
             style={videoStyle}
           />
           <ActivityIndicator
             size={'large'}
-            color="#00ffff"
+            color="#000"
             style={styles.indicator}
           />
-          <View style={styles.coverContainer}>
+          <View style={styles.coverTopContainer}>
             <Button
               color={'#0000007f'}
               title={'旋转'}
@@ -121,13 +224,71 @@ export default class VideoPage extends React.Component {
                 this?._video?.dismissFullscreenPlayer();
               }}
             />
-            <Text>Video Info Demo {JSON.stringify(this.data)}</Text>
+            <Button
+              color={'#0000007f'}
+              title={'视频信息'}
+              onPress={this._handleVideoInfo}
+            />
+          </View>
+          <View style={styles.coverBottomContainer}>
+            <TouchableWithoutFeedback
+              onPress={this.onPlayPausePressed}
+              style={{padding: 5}}>
+              <AntDesign
+                name={this.paused ? 'pausecircle' : 'playcircleo'}
+                color={'white'}
+                size={28}
+              />
+            </TouchableWithoutFeedback>
+            <View style={styles.progress}>
+              <Slider
+                style={customStyles8.container}
+                value={this.getCurrentTimePercentage}
+                trackStyle={customStyles8.track}
+                thumbStyle={customStyles8.thumb}
+                minimumTrackTintColor={'#FF8C00'}
+                maximumTrackTintColor={'#fff'}
+                thumbTintColor={'#FF8C00'}
+              />
+            </View>
+            <Text
+              style={{
+                color: '#fff',
+                width: 50,
+                margin: 5,
+              }}>
+              {this.duration.toFixed(2)}
+            </Text>
           </View>
         </View>
       </View>
     );
   }
+
+  @action
+  private onPlayPausePressed = () => {
+    this.paused = !this.paused;
+  };
 }
+
+const customStyles8 = StyleSheet.create({
+  container: {
+    height: 3,
+    borderRadius: 3 / 2,
+    backgroundColor: '#FFF',
+  },
+  track: {
+    height: 3,
+    borderRadius: 3 / 2,
+    backgroundColor: '#FFF',
+  },
+  thumb: {
+    width: 10,
+    height: 3,
+    backgroundColor: '#FF8C00',
+    borderRadius: 3 / 2,
+  },
+});
 
 const {width} = Dimensions.get('screen');
 
@@ -135,30 +296,38 @@ const styles = StyleSheet.create({
   rootContainer: {
     flex: 1,
     flexDirection: 'column',
-    backgroundColor: '#ff0000',
+    backgroundColor: '#eee',
   },
   container: {
     height: (width / 1920) * 1080,
-    backgroundColor: '#ffff00',
     justifyContent: 'center',
     alignItems: 'center',
   },
   container1: {
     flex: 1,
-    backgroundColor: '#ffff00',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  coverContainer: {
+  coverTopContainer: {
     flexDirection: 'row',
     position: 'absolute',
-    top: 0,
+    justifyContent: 'space-between',
+    top: 3,
     left: 0,
+    right: 0,
+  },
+  coverBottomContainer: {
+    backgroundColor: '#0000007f',
+    flexDirection: 'row',
+    position: 'absolute',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     bottom: 0,
+    left: 0,
     right: 0,
   },
   indicator: {
-    backgroundColor: '#f0e000',
+    backgroundColor: 'transparent',
     alignSelf: 'center',
   },
   backgroundVideo1: {
@@ -167,7 +336,6 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     right: 0,
-    backgroundColor: '#880099',
   },
   backgroundVideo: {
     position: 'absolute',
@@ -175,6 +343,16 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     right: 0,
-    backgroundColor: '#88ff99',
+  },
+  progress: {
+    flex: 1,
+  },
+  innerProgressCompleted: {
+    height: 3,
+    backgroundColor: '#FF8C00',
+  },
+  innerProgressRemaining: {
+    height: 3,
+    backgroundColor: '#eee',
   },
 });

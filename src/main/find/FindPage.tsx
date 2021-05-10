@@ -3,6 +3,7 @@ import {Button, StyleSheet, Text, View} from 'react-native';
 import {NavigationStackProp} from 'react-navigation-stack';
 import {NavigationParams, NavigationRoute} from 'react-navigation';
 import Swiper from 'react-native-swiper';
+import NavigationService from '../../NavigationService';
 
 interface Props {
   navigation: NavigationStackProp<NavigationRoute, NavigationParams>;
@@ -64,9 +65,7 @@ export default class FindPage extends React.Component<Props> {
             title={'Go To Other Screen'}
             onPress={() => {
               console.log('Go To MainPage Screen');
-              this.props.navigation
-                ?.dangerouslyGetParent()
-                ?.navigate('BusinessApp');
+              NavigationService?.navigate('BusinessApp');
               // this.props.navigation.navigate('MainPage', {userId: '333999'});
             }}
           />
@@ -76,21 +75,25 @@ export default class FindPage extends React.Component<Props> {
             title={'Go To Video Screen'}
             onPress={() => {
               console.log('Go To Video Screen');
-              this.props.navigation
-                ?.dangerouslyGetParent()
-                ?.navigate('VideoPage');
-              // this.props.navigation.navigate('MainPage', {userId: '333999'});
+              NavigationService?.navigate('VideoPage');
             }}
           />
         </View>
+        {/*<View style={{margin: 15}}>*/}
+        {/*  <Button*/}
+        {/*    title={'Go To VideoPlayerController'}*/}
+        {/*    onPress={() => {*/}
+        {/*      console.log('Go To VideoPlayerController');*/}
+        {/*      NavigationService?.navigate('VideoPlayerController');*/}
+        {/*    }}*/}
+        {/*  />*/}
+        {/*</View>*/}
         <View style={{margin: 15}}>
           <Button
-            title={'Go To Video Player'}
+            title={'Go To MediaControls'}
             onPress={() => {
-              console.log('Go To Video Player');
-              this.props.navigation
-                ?.dangerouslyGetParent()
-                ?.navigate('VideoPlayer');
+              console.log('Go To MediaControls');
+              NavigationService?.navigate('MediaControls');
               // this.props.navigation.navigate('MainPage', {userId: '333999'});
             }}
           />
