@@ -12,6 +12,7 @@ import React from 'react';
 import NavigationService from '../NavigationService';
 import {createAppContainer} from 'react-navigation';
 import MediaControls from '../video/MediaControls';
+import CarouselPage from '../component/App';
 
 const MainTabNavigator = createBottomTabNavigator(
   {
@@ -74,6 +75,9 @@ const TopLevelNavigator = createStackNavigator(
     },
     MediaControls: {
       screen: MediaControls,
+    },
+    CarouselPage: {
+      screen: CarouselPage,
     },
     VideoPage: {
       screen: VideoPage,

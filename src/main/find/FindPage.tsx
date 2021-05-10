@@ -97,6 +97,18 @@ export default class FindPage extends React.Component<Props> {
         </View>
         <View style={{margin: 15}}>
           <Button
+            title={'Go To CarouselPage'}
+            onPress={() => {
+              console.log('Go To CarouselPage');
+              this.props.navigation
+                ?.dangerouslyGetParent()
+                ?.navigate('CarouselPage');
+              // this.props.navigation.navigate('MainPage', {userId: '333999'});
+            }}
+          />
+        </View>
+        <View style={{margin: 15}}>
+          <Button
             title={'Go To Business Screen'}
             onPress={() => {
               console.log('Go To Business Screen');
