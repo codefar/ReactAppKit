@@ -22,10 +22,6 @@ target 'MyApp' do
 
   pod 'react-native-safe-area-context', :path => '../node_modules/react-native-safe-area-context'
 
-  pod 'RNEasyIjkplayer', :path => '../node_modules/react-native-easy-ijkplayer'
-
-  pod 'react-native-ijkplayer', :path => '../node_modules/react-native-ijkplayer'
-
   pod 'react-native-video', :path => '../node_modules/react-native-video'
 
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'

@@ -44,6 +44,15 @@ export default class FindPage extends React.Component<Props> {
         </View>
         <View style={{margin: 15}}>
           <Button
+            title={'Swtich To DemoListPage'}
+            onPress={() => {
+              console.log('Go To DemoListPage');
+              NavigationService.navigate('DemoListPage');
+            }}
+          />
+        </View>
+        <View style={{margin: 15}}>
+          <Button
             title={'Swtich To Home Tab'}
             onPress={() => {
               console.log('Go To MainPage Screen');

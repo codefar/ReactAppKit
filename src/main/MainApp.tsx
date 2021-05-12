@@ -12,7 +12,11 @@ import NavigationService from '../NavigationService';
 import {createAppContainer} from 'react-navigation';
 import MediaControls from '../video/MediaControls';
 import CarouselPage from '../component/App';
-import VideoPlayerController from '../video/VideoPlayerController';
+import DemoListPage from '../component/DemoListPage';
+import BigHead from '../component/dots/BigHead';
+import IntroData from '../component/dots/IntroData';
+import ButtonNavigation from '../component/dots/ButtonNavigation';
+import WormDotExample from '../component/dots/WormDotExample';
 
 const MainTabNavigator = createBottomTabNavigator(
   {
@@ -70,9 +74,9 @@ const TopLevelNavigator = createStackNavigator(
     BusinessApp: {
       screen: BusinessApp,
     },
-    // VideoPlayerController: {
-    //   screen: VideoPlayerController,
-    // },
+    DemoListPage: {
+      screen: DemoListPage,
+    },
     MediaControls: {
       screen: MediaControls,
     },
@@ -81,9 +85,18 @@ const TopLevelNavigator = createStackNavigator(
     },
     VideoPage: {
       screen: VideoPage,
-      navigationOptions: {
-        // header: null,
-      },
+    },
+    BigHead: {
+      screen: BigHead,
+    },
+    IntroData: {
+      screen: IntroData,
+    },
+    ButtonNavigation: {
+      screen: ButtonNavigation,
+    },
+    WormDotExample: {
+      screen: WormDotExample,
     },
   },
   {
@@ -96,9 +109,6 @@ const TopLevelNavigator = createStackNavigator(
     },
   },
 );
-
-// export default AppNavigator;
-// export default createAppContainer(AppNavigator);
 
 const AppContainer = createAppContainer(TopLevelNavigator);
 

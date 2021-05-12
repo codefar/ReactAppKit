@@ -1,2 +1,2 @@
 # ReactAppKit
-React Native App Kit
+React Native IntroData Kit

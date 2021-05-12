@@ -24,7 +24,7 @@ const AnimatedPagerView = Animated.createAnimatedComponent(PagerView);
 const INTRO_DATA = [
   {
     key: '1',
-    title: 'App showcase ✨',
+    title: 'IntroData showcase ✨',
     description:
       'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
   },
